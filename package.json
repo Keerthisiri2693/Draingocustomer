@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "name": "DrainGoCustomer",
   "version": "0.0.1",
   "private": true,
@@ -12,6 +11,7 @@
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.83.0",
+    "@react-navigation/bottom-tabs": "^7.9.0",
     "@react-navigation/native": "^7.1.26",
     "@react-navigation/native-stack": "^7.9.0",
     "react": "19.2.0",
@@ -41,34 +41,5 @@
   },
   "engines": {
     "node": ">=20"
-=======
-  "name": "drain-fullstack",
-  "version": "1.0.0",
-  "description": "Full-stack application for Customer, Driver, and Owner roles",
-  "main": "server/index.js",
-  "scripts": {
-    "start": "node server/index.js",
-    "dev": "nodemon server/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "admin:install": "cd admin && npm install",
-    "admin:start": "cd admin && npm start",
-    "admin:build": "cd admin && npm run build",
-    "admin:dev": "cd admin && npm start",
-    "full:dev": "concurrently \"npm run dev\" \"npm run admin:dev\""
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "mongoose": "^8.20.3",
-    "twilio": "^5.10.7"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2",
-    "concurrently": "^8.2.2"
->>>>>>> dbd21818e23cb147be2e744a18633f3de130f9c1
   }
 }
