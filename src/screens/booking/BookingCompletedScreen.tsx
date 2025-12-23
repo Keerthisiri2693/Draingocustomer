@@ -1,66 +1,71 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
+  Animated,
 } from 'react-native';
 import colors from '../../theme/colors';
+import AppIcon from '../../components/AppIcon';
 
 const BookingCompletedScreen = ({ navigation }: any) => {
-  const [rating, setRating] = useState<number>(0);
-  const [feedback, setFeedback] = useState<string>('');
+  const [rating, setRating] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
 
   return (
-    <View style={styles.container}>
-      {/* Success */}
-      <Text style={styles.successIcon}>✅</Text>
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          opacity: fadeAnim,
+          transform: [
+            {
+              translateY: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [10, 0],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      <AppIcon type="ant" name="checkcircle" size={56} color={colors.primary} />
       <Text style={styles.title}>Service Completed</Text>
-      <Text style={styles.subTitle}>
-        Thank you for using Drain Go
-      </Text>
+      <Text style={styles.subTitle}>Thank you for using Drain Go</Text>
 
-      {/* Rating */}
-      <View style={styles.starsRow}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity
-            key={star}
-            onPress={() => setRating(star)}
-          >
-            <Text
-              style={[
-                styles.star,
-                rating >= star && styles.starActive,
-              ]}
-            >
-              ★
-            </Text>
+      <View style={styles.starRow}>
+        {[1, 2, 3, 4, 5].map((s) => (
+          <TouchableOpacity key={s} onPress={() => setRating(s)}>
+            <AppIcon
+              type="ant"
+              name={rating >= s ? 'star' : 'staro'}
+              size={32}
+              color="#FFC107"
+            />
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Feedback */}
-      <TextInput
-        placeholder="Write your feedback (optional)"
-        style={styles.input}
-        multiline
-        value={feedback}
-        onChangeText={setFeedback}
-      />
-
-      {/* Submit */}
       <TouchableOpacity
         style={[
-          styles.submitButton,
-          rating === 0 && styles.disabledButton,
+          styles.submitBtn,
+          rating === 0 && { opacity: 0.5 },
         ]}
         disabled={rating === 0}
         onPress={() => navigation.replace('Tabs')}
       >
         <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 };
 
@@ -70,59 +75,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
-    padding: 24,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    padding: 24,
   },
-  successIcon: {
-    fontSize: 48,
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#3A2C1D',
-  },
-  subTitle: {
-    fontSize: 13,
-    color: '#777',
-    marginBottom: 30,
-  },
-  starsRow: {
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  star: {
-    fontSize: 32,
-    color: '#DDD',
-    marginHorizontal: 6,
-  },
-  starActive: {
-    color: '#FFC107',
-  },
-  input: {
-    width: '100%',
-    height: 90,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 20,
-    textAlignVertical: 'top',
-  },
-  submitButton: {
+  title: { fontSize: 20, fontWeight: '700', marginTop: 12 },
+  subTitle: { fontSize: 13, color: '#777', marginBottom: 24 },
+  starRow: { flexDirection: 'row', marginBottom: 30 },
+  submitBtn: {
     backgroundColor: colors.primary,
-    width: '100%',
     paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
+    paddingHorizontal: 40,
+    borderRadius: 14,
   },
-  disabledButton: {
-    backgroundColor: '#BDBDBD',
-  },
-  submitText: {
-    color: colors.white,
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  submitText: { color: colors.white, fontWeight: '700' },
 });

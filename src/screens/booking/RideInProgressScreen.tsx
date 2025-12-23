@@ -1,146 +1,69 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView,StatusBar,Platform,  } from 'react-native';
 import colors from '../../theme/colors';
+import AppIcon from '../../components/AppIcon';
+import commonStyles from '../../theme/styles';
 
 const RideInProgressScreen = ({ navigation }: any) => {
-  const [minutes, setMinutes] = useState<number>(0);
+  const [minutes, setMinutes] = useState(0);
 
-  // ⏱ Service timer
   useEffect(() => {
-    const timer = setInterval(() => {
-      setMinutes((prev) => prev + 1);
-    }, 60000); // every 1 minute
-
-    return () => clearInterval(timer);
+    const t = setInterval(() => setMinutes((m) => m + 1), 60000);
+    return () => clearInterval(t);
   }, []);
 
   return (
+    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
+      Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
     <View style={styles.container}>
-      {/* Status */}
       <Text style={styles.statusText}>Service in progress</Text>
 
-      {/* Map placeholder */}
       <View style={styles.mapArea}>
-        <Text style={styles.mapText}>🧹 Cleaning in progress</Text>
+        <AppIcon type="ant" name="sync" size={28} color={colors.primary} />
+        <Text style={styles.mapText}>Cleaning in progress</Text>
       </View>
 
-      {/* Driver info */}
-      <View style={styles.driverCard}>
+      <View style={commonStyles.card}>
         <View>
           <Text style={styles.driverName}>Ramesh Kumar</Text>
-          <Text style={styles.vehicleInfo}>
-            Lorry • TN 09 AB 4321
-          </Text>
+          <Text style={styles.vehicleInfo}>Lorry • TN 09 AB 4321</Text>
         </View>
-
-        <Text style={styles.timerText}>{minutes} min</Text>
+        <Text style={styles.timer}>{minutes} min</Text>
       </View>
 
-      {/* Actions */}
-      <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.smallButton}>
-          <Text style={styles.smallText}>📞 Call</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.smallButton}>
-          <Text style={styles.smallText}>💬 Chat</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Complete Service (demo) */}
       <TouchableOpacity
-        style={styles.completeButton}
+        style={styles.completeBtn}
         onPress={() => navigation.replace('BookingCompleted')}
       >
         <Text style={styles.completeText}>Complete Service</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 };
 
 export default RideInProgressScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-    padding: 16,
-  },
-  statusText: {
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 10,
-    color: '#3A2C1D',
-  },
+  container: { flex: 1, backgroundColor: colors.white, padding: 16 },
+  statusText: { fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 12 },
   mapArea: {
     flex: 1,
-    backgroundColor: '#E5E5E5',
-    borderRadius: 12,
-    alignItems: 'center',
+    backgroundColor: '#EEE',
+    borderRadius: 16,
     justifyContent: 'center',
-  },
-  mapText: {
-    fontSize: 14,
-    color: '#555',
-  },
-  driverCard: {
-    marginTop: 12,
-    padding: 14,
-    backgroundColor: '#F9F9F9',
-    borderRadius: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  driverName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#333',
-  },
-  vehicleInfo: {
-    fontSize: 12,
-    color: '#777',
-    marginTop: 4,
-  },
-  timerText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-  },
-  smallButton: {
-    flex: 1,
-    paddingVertical: 12,
-    marginHorizontal: 4,
-    borderRadius: 10,
-    backgroundColor: '#F1F1F1',
-    alignItems: 'center',
-  },
-  smallText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-  },
-  completeButton: {
+  mapText: { marginTop: 6, color: '#555' },
+  driverName: { fontSize: 15, fontWeight: '700' },
+  vehicleInfo: { fontSize: 12, color: '#777', marginTop: 4 },
+  timer: { fontWeight: '700', color: colors.primary },
+  completeBtn: {
     marginTop: 16,
     backgroundColor: colors.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
   },
-  completeText: {
-    color: colors.white,
-    fontSize: 15,
-    fontWeight: '700',
-  },
+  completeText: { color: colors.white, fontWeight: '700' },
 });

@@ -5,6 +5,9 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import colors from '../../theme/colors';
 
@@ -30,6 +33,8 @@ const BookingScreen = ({ navigation }: any) => {
   }, []);
 
   return (
+    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
+          Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
     <View style={styles.container}>
       {/* Loader */}
       <ActivityIndicator size="large" color={colors.primary} />
@@ -52,6 +57,7 @@ const BookingScreen = ({ navigation }: any) => {
         <Text style={styles.cancelText}>Cancel</Text>
       </TouchableOpacity>
     </View>
+  </SafeAreaView>
   );
 };
 

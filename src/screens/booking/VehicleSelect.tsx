@@ -4,6 +4,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import colors from '../../theme/colors';
 
@@ -13,6 +16,8 @@ const VehicleSelect = ({ navigation }: any) => {
   const [selected, setSelected] = useState<VehicleType | null>(null);
 
   return (
+    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
+      Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
     <View style={styles.container}>
       <Text style={styles.title}>Select Vehicle</Text>
 
@@ -58,6 +63,7 @@ const VehicleSelect = ({ navigation }: any) => {
         <Text style={styles.bookText}>Continue</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 };
 

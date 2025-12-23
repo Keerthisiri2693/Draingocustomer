@@ -4,100 +4,169 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import colors from '../../theme/colors';
+import styles from '../../theme/styles';
+import AppIcon from '../../components/AppIcon';
 
 const HomeScreen = ({ navigation }: any) => {
   return (
-    <View style={styles.container}>
-      {/* Fake Map Area */}
-      <View style={styles.mapArea}>
-        <Text style={styles.mapText}>📍 Your Location</Text>
-      </View>
+    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
+      Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
 
-      {/* Bottom Card */}
-      <View style={styles.bottomSheet}>
-        <Text style={styles.heading}>Select Vehicle</Text>
-
-        {/* Tractor */}
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate('VehicleSelect')}
-        >
+      <View style={styles.container}>
+        {/* HEADER */}
+        <View style={local.header}>
           <View>
-            <Text style={styles.vehicleTitle}>Tractor</Text>
-            <Text style={styles.vehicleSub}>Up to 5000 Litres</Text>
+            <Text style={local.welcome}>Your Location</Text>
+            <Text style={local.location}>Pakkam, Thiruvallur</Text>
           </View>
-          <Text style={styles.price}>₹800</Text>
-        </TouchableOpacity>
 
-        {/* Lorry */}
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate('VehicleSelect')}
+          <AppIcon
+            type="ion"
+            name="location-outline"
+            size={26}
+            color={colors.primary}
+          />
+        </View>
+
+        <ScrollView
+          contentContainerStyle={{ padding: 16 }}
+          showsVerticalScrollIndicator={false}
         >
-          <View>
-            <Text style={styles.vehicleTitle}>Lorry</Text>
-            <Text style={styles.vehicleSub}>Up to 10000 Litres</Text>
+          {/* MAIN CTA */}
+          <View style={[styles.card, local.ctaCard]}>
+            <AppIcon
+              type="fa5"
+              name="truck"
+              size={36}
+              color={colors.primary}
+            />
+            <Text style={local.ctaTitle}>
+              Need septic tank cleaning?
+            </Text>
+            <Text style={local.ctaSub}>
+              Book a nearby vehicle instantly
+            </Text>
+
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => navigation.navigate('VehicleSelect')}
+            >
+              <Text style={styles.primaryButtonText}>
+                Book Service
+              </Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.price}>₹1200</Text>
-        </TouchableOpacity>
+
+          {/* VEHICLE OPTIONS */}
+          <Text style={local.sectionTitle}>Available Vehicles</Text>
+
+          {/* LORRY CARD */}
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('VehicleSelect')}
+          >
+            <View style={local.vehicleRow}>
+              <AppIcon
+                type="fa5"
+                name="truck-moving"
+                size={28}
+                color={colors.primary}
+              />
+              <View>
+                <Text style={local.vehicleTitle}>Lorry</Text>
+                <Text style={local.vehicleSub}>
+                  Large capacity cleaning
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          {/* TRACTOR CARD */}
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('VehicleSelect')}
+          >
+            <View style={local.vehicleRow}>
+              <AppIcon
+                type="fa5"
+                name="tractor"
+                size={28}
+                color={colors.primary}
+              />
+              <View>
+                <Text style={local.vehicleTitle}>Tractor</Text>
+                <Text style={local.vehicleSub}>
+                  Small & quick service
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default HomeScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  mapArea: {
-    flex: 1,
-    backgroundColor: '#E5E5E5',
+const local = StyleSheet.create({
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  mapText: {
+  welcome: {
+    fontSize: 12,
+    color: '#777',
+  },
+  location: {
     fontSize: 16,
-    color: '#555',
+    fontWeight: '700',
+    color: '#333',
   },
-  bottomSheet: {
-    backgroundColor: colors.white,
-    padding: 16,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 10,
+  ctaCard: {
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  heading: {
+  ctaTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 12,
+    color: '#333',
+  },
+  ctaSub: {
+    fontSize: 13,
+    color: '#777',
+    marginVertical: 8,
+    textAlign: 'center',
+  },
+  sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 12,
     color: '#3A2C1D',
   },
-  card: {
+  vehicleRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: '#F9F9F9',
-    marginBottom: 12,
+    alignItems: 'center',
+    gap: 12,
   },
   vehicleTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#333',
   },
   vehicleSub: {
     fontSize: 12,
     color: '#777',
-    marginTop: 4,
-  },
-  price: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.primary,
+    marginTop: 2,
   },
 });

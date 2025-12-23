@@ -4,6 +4,9 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  SafeAreaView,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import colors from '../../theme/colors';
 
@@ -55,6 +58,8 @@ const BookingHistoryScreen = () => {
   );
 
   return (
+    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
+          Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
     <View style={styles.container}>
       <Text style={styles.title}>My Bookings</Text>
 
@@ -65,6 +70,7 @@ const BookingHistoryScreen = () => {
         showsVerticalScrollIndicator={false}
       />
     </View>
+    </SafeAreaView>
   );
 };
 
