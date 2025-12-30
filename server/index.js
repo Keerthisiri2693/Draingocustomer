@@ -15,9 +15,12 @@ app.use(cors());
 app.use(express.json());
 
 // Database connection
+const config = require('./config/config');
+const envConfig = config[process.env.NODE_ENV || 'development'];
+
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect(envConfig.mongodbUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -34,6 +37,7 @@ app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/vehicles', require('./routes/vehicleRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/drivers', require('./routes/driverRoutes'));
 
 // Basic health check route
 app.get('/api/health', (req, res) => {

@@ -8,6 +8,7 @@ import taTranslations from './locales/ta/translation.json';
 import teTranslations from './locales/te/translation.json';
 import knTranslations from './locales/kn/translation.json';
 import mlTranslations from './locales/ml/translation.json';
+import hiTranslations from './locales/hi/translation.json';
 
 i18n
   .use(initReactI18next)
@@ -17,7 +18,8 @@ i18n
       ta: { translation: taTranslations },
       te: { translation: teTranslations },
       kn: { translation: knTranslations },
-      ml: { translation: mlTranslations }
+      ml: { translation: mlTranslations },
+      hi: { translation: hiTranslations }
     },
     lng: 'en', // default language
     fallbackLng: 'en',

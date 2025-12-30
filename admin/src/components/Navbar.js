@@ -40,6 +40,7 @@ const Navbar = ({ onLogout }) => {
           <MenuItem onClick={() => changeLanguage('te')}>తెలుగు</MenuItem>
           <MenuItem onClick={() => changeLanguage('kn')}>ಕನ್ನಡ</MenuItem>
           <MenuItem onClick={() => changeLanguage('ml')}>മലയാളം</MenuItem>
+          <MenuItem onClick={() => changeLanguage('hi')}>हिन्दी</MenuItem>
         </Menu>
 
         <Button color="inherit" onClick={onLogout} startIcon={<Logout />}>

@@ -315,6 +315,7 @@ const HomeScreen = ({ route }) => {
         </View>
       )}
 
+
       {/* Map View */}
       <View style={styles.mapContainer}>
         {loadingLocation ? (

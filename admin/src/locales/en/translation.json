@@ -46,5 +46,9 @@
   "tankCapacity": "Tank Capacity",
   "noData": "No data available",
   "error": "Error occurred",
-  "success": "Operation successful"
+  "success": "Operation successful",
+  "cancel": "Cancel",
+  "update": "Update",
+  "delete": "Delete",
+  "confirmDelete": "Confirm Delete"
 }

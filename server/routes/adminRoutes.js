@@ -222,7 +222,7 @@ router.get('/stats', async (req, res) => {
       .limit(5)
       .populate('customer', 'name')
       .populate('vehicle', 'vehicleNumber');
-
+  
     res.json({
       ownerCount,
       driverCount,
@@ -236,5 +236,6 @@ router.get('/stats', async (req, res) => {
     res.status(500).json({ message: 'Server error getting stats' });
   }
 });
+
 
 module.exports = router;

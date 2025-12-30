@@ -63,12 +63,12 @@ function App() {
               path="/driver-approval" 
               element={isAuthenticated ? <DriverApproval /> : <Navigate to="/login" />}
             />
-            <Route 
-              path="/rate-management" 
+            <Route
+              path="/rate-management"
               element={isAuthenticated ? <RateManagement /> : <Navigate to="/login" />}
             />
-            <Route 
-              path="/feedback" 
+            <Route
+              path="/feedback"
               element={isAuthenticated ? <FeedbackView /> : <Navigate to="/login" />}
             />
             <Route 

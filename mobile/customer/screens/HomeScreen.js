@@ -280,6 +280,7 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </MapView>
           
+          
           <View style={styles.bottomPanel}>
             {!bookingInProgress ? (
               <>

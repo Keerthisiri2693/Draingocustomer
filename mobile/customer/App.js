@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import HomeScreen from './screens/HomeScreen';
-import LoginScreen from './screens/LoginScreen';
+import LoginScreen from './screens/LoginScreen';cd
 import RegisterScreen from './screens/RegisterScreen';
 
 const Stack = createStackNavigator();

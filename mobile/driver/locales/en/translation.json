@@ -40,5 +40,9 @@
   "serviceCompleted": "Service completed!",
   "language": "Language",
   "selectLanguage": "Select Language",
-  "otpSentToPhone": "OTP sent to your phone number"
+  "otpSentToPhone": "OTP sent to your phone number",
+  "cancel": "Cancel",
+  "update": "Update",
+  "delete": "Delete",
+  "confirmDelete": "Confirm Delete"
 }
