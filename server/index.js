@@ -20,16 +20,14 @@ const envConfig = config[process.env.NODE_ENV || 'development'];
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(envConfig.mongodbUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(envConfig.mongodbUri);
     console.log('MongoDB connected successfully');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('MongoDB connection error:', error.message);
     process.exit(1);
   }
 };
+
 
 // Routes
 app.use('/api/customers', require('./routes/customerRoutes'));
