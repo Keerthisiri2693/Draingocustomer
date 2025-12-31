@@ -57,7 +57,7 @@ const Dashboard = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <LocalTaxi color="secondary" sx={{ fontSize: 40, mb: 1 }} />
+              <People color="primary" sx={{ fontSize: 40, mb: 1 }} />
               <Typography variant="h6">{t('totalDrivers')}</Typography>
               <Typography variant="h4">{stats?.driverCount || 0}</Typography>
             </CardContent>
