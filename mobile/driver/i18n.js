@@ -3,12 +3,14 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 // Translation files
-import enTranslations from './locales/en/translation.json';
-import taTranslations from './locales/ta/translation.json';
-import teTranslations from './locales/te/translation.json';
-import knTranslations from './locales/kn/translation.json';
-import mlTranslations from './locales/ml/translation.json';
-import hiTranslations from './locales/hi/translation.json';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
+const enTranslations = require('./locales/en/translation.json');
+const taTranslations = require('./locales/ta/translation.json');
+const knTranslations = require('./locales/kn/translation.json');
+const mlTranslations = require('./locales/ml/translation.json');
+const hiTranslations = require('./locales/hi/translation.json');
 
 i18n
   .use(initReactI18next)
@@ -16,7 +18,6 @@ i18n
     resources: {
       en: { translation: enTranslations },
       ta: { translation: taTranslations },
-      te: { translation: teTranslations },
       kn: { translation: knTranslations },
       ml: { translation: mlTranslations },
       hi: { translation: hiTranslations }

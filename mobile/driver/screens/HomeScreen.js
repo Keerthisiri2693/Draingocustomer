@@ -5,8 +5,12 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import axios from 'axios';
 import Geolocation from 'react-native-geolocation-service';
 import { CheckBox } from '@react-native-community/checkbox';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from '../components/LanguageSelector';
 
 const HomeScreen = ({ route }) => {
+  const { t } = useTranslation();
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const { driverData } = route.params || {};
   const mapRef = useRef(null);
 
@@ -171,15 +175,15 @@ const HomeScreen = ({ route }) => {
   // Handle order actions
   const handleAcceptOrder = (order) => {
     Alert.alert(
-      'Accept Order',
-      `Are you sure you want to accept this order from ${order.customerName}?`,
+      t('acceptOrder'),
+      t('acceptOrderConfirm', { customerName: order.customerName }),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Accept', 
+        { text: t('cancel'), style: 'cancel' },
+        {
+          text: t('accept'),
           onPress: () => {
             // Update order status
-            const updatedOrders = orders.map(o => 
+            const updatedOrders = orders.map(o =>
               o.id === order.id ? { ...o, status: 'accepted' } : o
             );
             setOrders(updatedOrders);
@@ -194,7 +198,7 @@ const HomeScreen = ({ route }) => {
               }, 1000);
             }
 
-            Alert.alert('Success', 'Order accepted! Customer location pinned on map.');
+            Alert.alert(t('success'), t('orderAccepted'));
           }
         }
       ]
@@ -203,19 +207,19 @@ const HomeScreen = ({ route }) => {
 
   const handleRejectOrder = (order) => {
     Alert.alert(
-      'Reject Order',
-      `Are you sure you want to reject this order from ${order.customerName}?`,
+      t('rejectOrder'),
+      t('rejectOrderConfirm', { customerName: order.customerName }),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Reject', 
+        { text: t('cancel'), style: 'cancel' },
+        {
+          text: t('reject'),
           style: 'destructive',
           onPress: () => {
-            const updatedOrders = orders.map(o => 
+            const updatedOrders = orders.map(o =>
               o.id === order.id ? { ...o, status: 'rejected' } : o
             );
             setOrders(updatedOrders);
-            Alert.alert('Info', 'Order rejected.');
+            Alert.alert(t('info'), t('orderRejected'));
           }
         }
       ]
@@ -224,19 +228,19 @@ const HomeScreen = ({ route }) => {
 
   const handleCompleteOrder = (order) => {
     Alert.alert(
-      'Complete Order',
-      `Mark this order as completed for ${order.customerName}?`,
+      t('completeOrder'),
+      t('completeOrderConfirm', { customerName: order.customerName }),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Complete', 
+        { text: t('cancel'), style: 'cancel' },
+        {
+          text: t('complete'),
           onPress: () => {
-            const updatedOrders = orders.map(o => 
+            const updatedOrders = orders.map(o =>
               o.id === order.id ? { ...o, status: 'completed' } : o
             );
             setOrders(updatedOrders);
             setCustomerLocation(null);
-            Alert.alert('Success', 'Order completed successfully!');
+            Alert.alert(t('success'), t('orderCompleted'));
           }
         }
       ]
@@ -248,13 +252,13 @@ const HomeScreen = ({ route }) => {
     const newExpiry = new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000);
     setDriver({ ...driver, rateExpiry: newExpiry });
     setShowRenewalAlert(false);
-    Alert.alert('Success', 'Rate validation renewed for 6 months!');
+    Alert.alert(t('success'), t('rateRenewed'));
   };
 
   const toggleActiveStatus = () => {
     const newStatus = !driver.isActive;
     setDriver({ ...driver, isActive: newStatus });
-    Alert.alert('Info', `You are now ${newStatus ? 'ACTIVE' : 'INACTIVE'} for receiving orders.`);
+    Alert.alert(t('info'), newStatus ? t('nowActive') : t('nowInactive'));
   };
 
   const openOrderDetails = (order) => {
@@ -287,16 +291,24 @@ const HomeScreen = ({ route }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Driver Dashboard</Text>
+        <View style={styles.headerTop}>
+          <Text style={styles.headerTitle}>{t('home')}</Text>
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={() => setShowLanguageSelector(true)}
+          >
+            <Text style={styles.languageButtonText}>{t('language')}</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.headerInfo}>
           <Text style={styles.driverName}>{driver.name}</Text>
-          <Text style={styles.driverStatus}>{driver.isActive ? 'ACTIVE' : 'INACTIVE'}</Text>
+          <Text style={styles.driverStatus}>{driver.isActive ? t('active') : t('inactive')}</Text>
         </View>
       </View>
 
       {/* Active Status Toggle */}
       <View style={styles.toggleContainer}>
-        <Text style={styles.toggleLabel}>Available for orders:</Text>
+        <Text style={styles.toggleLabel}>{t('availableForOrders')}</Text>
         <Switch
           value={driver.isActive}
           onValueChange={toggleActiveStatus}
@@ -308,9 +320,9 @@ const HomeScreen = ({ route }) => {
       {/* Rate Validation Alert */}
       {showRenewalAlert && (
         <View style={styles.alertContainer}>
-          <Text style={styles.alertText}>⚠️ Your rate validation expires in {daysRemaining} days!</Text>
+          <Text style={styles.alertText}>⚠️ {t('rateValidationExpires', { days: daysRemaining })}</Text>
           <TouchableOpacity style={styles.renewButton} onPress={handleRenewRate}>
-            <Text style={styles.renewButtonText}>Renew Now</Text>
+            <Text style={styles.renewButtonText}>{t('renewNow')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -321,7 +333,7 @@ const HomeScreen = ({ route }) => {
         {loadingLocation ? (
           <View style={styles.loadingOverlay}>
             <ActivityIndicator size="large" color="#3498db" />
-            <Text style={styles.loadingText}>Getting your location...</Text>
+            <Text style={styles.loadingText}>{t('loadingLocation')}</Text>
           </View>
         ) : currentLocation ? (
           <MapView
@@ -355,13 +367,13 @@ const HomeScreen = ({ route }) => {
             )}
           </MapView>
         ) : (
-          <Text style={styles.errorText}>Unable to get your location. Please enable location services.</Text>
+          <Text style={styles.errorText}>{t('locationError')}</Text>
         )}
       </View>
 
       {/* Orders Section */}
       <View style={styles.ordersSection}>
-        <Text style={styles.sectionTitle}>Pending Orders</Text>
+        <Text style={styles.sectionTitle}>{t('pendingOrders')}</Text>
 
         {orders.filter(order => order.status === 'pending').length > 0 ? (
           <ScrollView horizontal style={styles.ordersScroll}>
@@ -376,24 +388,24 @@ const HomeScreen = ({ route }) => {
                     style={[styles.orderButton, styles.acceptButton]}
                     onPress={() => handleAcceptOrder(order)}
                   >
-                    <Text style={styles.orderButtonText}>Accept</Text>
+                    <Text style={styles.orderButtonText}>{t('accept')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={[styles.orderButton, styles.rejectButton]}
                     onPress={() => handleRejectOrder(order)}
                   >
-                    <Text style={styles.orderButtonText}>Reject</Text>
+                    <Text style={styles.orderButtonText}>{t('reject')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ))}
           </ScrollView>
         ) : (
-          <Text style={styles.noOrders}>No pending orders</Text>
+          <Text style={styles.noOrders}>{t('noPendingOrders')}</Text>
         )}
 
         {/* Active Orders */}
-        <Text style={styles.sectionTitle}>Active Orders</Text>
+        <Text style={styles.sectionTitle}>{t('activeOrders')}</Text>
 
         {orders.filter(order => order.status === 'accepted').length > 0 ? (
           <ScrollView horizontal style={styles.ordersScroll}>
@@ -408,20 +420,20 @@ const HomeScreen = ({ route }) => {
                     style={[styles.orderButton, styles.completeButton]}
                     onPress={() => handleCompleteOrder(order)}
                   >
-                    <Text style={styles.orderButtonText}>Complete</Text>
+                    <Text style={styles.orderButtonText}>{t('complete')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={[styles.orderButton, styles.detailsButton]}
                     onPress={() => openOrderDetails(order)}
                   >
-                    <Text style={styles.orderButtonText}>Details</Text>
+                    <Text style={styles.orderButtonText}>{t('details')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ))}
           </ScrollView>
         ) : (
-          <Text style={styles.noOrders}>No active orders</Text>
+          <Text style={styles.noOrders}>{t('noActiveOrders')}</Text>
         )}
       </View>
 
@@ -449,34 +461,34 @@ const HomeScreen = ({ route }) => {
           <View style={styles.modalContent}>
             {selectedOrder && (
               <>
-                <Text style={styles.modalTitle}>Order Details</Text>
+                <Text style={styles.modalTitle}>{t('orderDetails')}</Text>
                 <View style={styles.modalInfo}>
-                  <Text style={styles.modalLabel}>Customer:</Text>
+                  <Text style={styles.modalLabel}>{t('customer')}:</Text>
                   <Text style={styles.modalValue}>{selectedOrder.customerName}</Text>
                 </View>
                 <View style={styles.modalInfo}>
-                  <Text style={styles.modalLabel}>Phone:</Text>
+                  <Text style={styles.modalLabel}>{t('phone')}:</Text>
                   <Text style={styles.modalValue}>{selectedOrder.customerPhone}</Text>
                 </View>
                 <View style={styles.modalInfo}>
-                  <Text style={styles.modalLabel}>Address:</Text>
+                  <Text style={styles.modalLabel}>{t('address')}:</Text>
                   <Text style={styles.modalValue}>{selectedOrder.customerAddress}</Text>
                 </View>
                 <View style={styles.modalInfo}>
-                  <Text style={styles.modalLabel}>Service:</Text>
+                  <Text style={styles.modalLabel}>{t('service')}:</Text>
                   <Text style={styles.modalValue}>{selectedOrder.serviceType}</Text>
                 </View>
                 <View style={styles.modalInfo}>
-                  <Text style={styles.modalLabel}>Date/Time:</Text>
+                  <Text style={styles.modalLabel}>{t('dateTime')}:</Text>
                   <Text style={styles.modalValue}>{selectedOrder.date} • {selectedOrder.time}</Text>
                 </View>
                 <View style={styles.modalInfo}>
-                  <Text style={styles.modalLabel}>Price:</Text>
+                  <Text style={styles.modalLabel}>{t('price')}:</Text>
                   <Text style={styles.modalValue}>{selectedOrder.price}</Text>
                 </View>
 
                 <TouchableOpacity style={styles.closeButton} onPress={closeOrderModal}>
-                  <Text style={styles.closeButtonText}>Close</Text>
+                  <Text style={styles.closeButtonText}>{t('close')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -493,55 +505,55 @@ const HomeScreen = ({ route }) => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Vehicle Details</Text>
+            <Text style={styles.modalTitle}>{t('vehicleDetails')}</Text>
 
             <View style={styles.modalInfo}>
-              <Text style={styles.modalLabel}>Type:</Text>
+              <Text style={styles.modalLabel}>{t('type')}:</Text>
               <Text style={styles.modalValue}>{driver.vehicleType}</Text>
             </View>
 
             <View style={styles.modalInfo}>
-              <Text style={styles.modalLabel}>Model:</Text>
+              <Text style={styles.modalLabel}>{t('model')}:</Text>
               <Text style={styles.modalValue}>{driver.vehicleModel}</Text>
             </View>
 
             <View style={styles.modalInfo}>
-              <Text style={styles.modalLabel}>Tank Capacity:</Text>
+              <Text style={styles.modalLabel}>{t('tankCapacity')}:</Text>
               <Text style={styles.modalValue}>{driver.tankCapacity}L</Text>
             </View>
 
             <View style={styles.modalInfo}>
-              <Text style={styles.modalLabel}>Vehicle Number:</Text>
+              <Text style={styles.modalLabel}>{t('vehicleNumber')}:</Text>
               <Text style={styles.modalValue}>{driver.vehicleNumber}</Text>
             </View>
 
             <View style={styles.modalInfo}>
-              <Text style={styles.modalLabel}>Rate:</Text>
-              <Text style={styles.modalValue}>₹{driver.rate} per trip</Text>
+              <Text style={styles.modalLabel}>{t('rate')}:</Text>
+              <Text style={styles.modalValue}>₹{driver.rate} {t('perTrip')}</Text>
             </View>
 
             <View style={styles.modalInfo}>
-              <Text style={styles.modalLabel}>Service Area:</Text>
+              <Text style={styles.modalLabel}>{t('serviceArea')}:</Text>
               <Text style={styles.modalValue}>{driver.area}</Text>
             </View>
 
             <View style={styles.modalInfo}>
-              <Text style={styles.modalLabel}>Membership:</Text>
+              <Text style={styles.modalLabel}>{t('membership')}:</Text>
               <Text style={styles.modalValue}>{driver.membershipPlan}</Text>
             </View>
 
             <View style={styles.modalInfo}>
-              <Text style={styles.modalLabel}>Rate Expiry:</Text>
+              <Text style={styles.modalLabel}>{t('rateExpiry')}:</Text>
               <Text style={styles.modalValue}>{new Date(driver.rateExpiry).toLocaleDateString()}</Text>
             </View>
 
             <View style={styles.modalInfo}>
-              <Text style={styles.modalLabel}>Estimated Revenue:</Text>
-              <Text style={styles.modalValue}>₹{Math.floor(Math.random() * 50000) + 10000}/month</Text>
+              <Text style={styles.modalLabel}>{t('estimatedRevenue')}:</Text>
+              <Text style={styles.modalValue}>₹{Math.floor(Math.random() * 50000) + 10000}/{t('perMonth')}</Text>
             </View>
 
             <TouchableOpacity style={styles.closeButton} onPress={closeVehicleModal}>
-              <Text style={styles.closeButtonText}>Close</Text>
+              <Text style={styles.closeButtonText}>{t('close')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -556,7 +568,7 @@ const HomeScreen = ({ route }) => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Customer Feedback</Text>
+            <Text style={styles.modalTitle}>{t('customerFeedback')}</Text>
 
             {feedback.length > 0 ? (
               <ScrollView style={styles.feedbackScroll}>
@@ -576,15 +588,21 @@ const HomeScreen = ({ route }) => {
                 ))}
               </ScrollView>
             ) : (
-              <Text style={styles.noFeedback}>No feedback yet</Text>
+              <Text style={styles.noFeedback}>{t('noFeedback')}</Text>
             )}
 
             <TouchableOpacity style={styles.closeButton} onPress={closeFeedbackModal}>
-              <Text style={styles.closeButtonText}>Close</Text>
+              <Text style={styles.closeButtonText}>{t('close')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
+      {/* Language Selector Modal */}
+      <LanguageSelector
+        visible={showLanguageSelector}
+        onClose={() => setShowLanguageSelector(false)}
+      />
     </View>
   );
 };
@@ -598,6 +616,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#3498db',
     padding: 15,
     paddingTop: 40
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  languageButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: 8,
+    borderRadius: 20,
+    minWidth: 80,
+    alignItems: 'center'
+  },
+  languageButtonText: {
+    color: '#fff',
+    fontSize: 14
   },
   headerTitle: {
     color: '#fff',
