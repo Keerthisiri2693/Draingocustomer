@@ -1,5 +1,5 @@
 // Admin Model
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const AdminSchema = new mongoose.Schema({
   username: {
@@ -38,4 +38,4 @@ AdminSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Admin', AdminSchema);
+export default mongoose.model('Admin', AdminSchema);

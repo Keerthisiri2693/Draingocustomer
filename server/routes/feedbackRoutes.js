@@ -1,8 +1,8 @@
 // Feedback routes implementation
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Feedback = require('../models/Feedback');
-const Booking = require('../models/Booking');
+import Feedback from '../models/Feedback.js';
+import Booking from '../models/Booking.js';
 
 // Submit feedback
 router.post('/', async (req, res) => {
@@ -89,4 +89,4 @@ router.get('/vehicle/:vehicleId', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

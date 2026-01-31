@@ -1,5 +1,5 @@
 // Owner Model
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const OwnerSchema = new mongoose.Schema({
   name: {
@@ -47,4 +47,4 @@ OwnerSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Owner', OwnerSchema);
+export default mongoose.model('Owner', OwnerSchema);

@@ -1,8 +1,8 @@
 // Main server entry point
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 // Database connection
-const config = require('./config/config');
+import config from './config/config.js';
 const envConfig = config[process.env.NODE_ENV || 'development'];
 
 const connectDB = async () => {
@@ -30,12 +30,19 @@ const connectDB = async () => {
 
 
 // Routes
-app.use('/api/customers', require('./routes/customerRoutes'));
-app.use('/api/bookings', require('./routes/bookingRoutes'));
-app.use('/api/vehicles', require('./routes/vehicleRoutes'));
-app.use('/api/feedback', require('./routes/feedbackRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
-app.use('/api/drivers', require('./routes/driverRoutes'));
+import customerRoutes from './routes/customerRoutes.js';
+import bookingRoutes from './routes/bookingRoutes.js';
+import vehicleRoutes from './routes/vehicleRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import driverRoutes from './routes/driverRoutes.js';
+
+app.use('/api/customers', customerRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/drivers', driverRoutes);
 
 // Basic health check route
 app.get('/api/health', (req, res) => {
@@ -61,4 +68,4 @@ app.on('error', (error) => {
   }
 });
 
-module.exports = app;
+export default app;

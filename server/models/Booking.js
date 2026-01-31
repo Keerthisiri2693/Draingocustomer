@@ -1,5 +1,5 @@
 // Booking Model
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const BookingSchema = new mongoose.Schema({
   customer: {
@@ -73,4 +73,4 @@ BookingSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Booking', BookingSchema);
+export default mongoose.model('Booking', BookingSchema);

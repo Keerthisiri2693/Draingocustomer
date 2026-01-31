@@ -21,7 +21,4 @@ const sendSMS = async (phoneNumber, message) => {
   return { success: true };
 };
 
-module.exports = {
-  generateOTP,
-  sendSMS
-};
+export { generateOTP, sendSMS };

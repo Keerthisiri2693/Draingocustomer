@@ -1,7 +1,7 @@
 // Vehicle routes implementation
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Vehicle = require('../models/Vehicle');
+import Vehicle from '../models/Vehicle.js';
 
 // Get nearby vehicles
 router.get('/nearby', async (req, res) => {
@@ -94,4 +94,4 @@ router.put('/:vehicleId/location', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

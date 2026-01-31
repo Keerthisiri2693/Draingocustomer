@@ -1,5 +1,5 @@
 // Customer Model
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const CustomerSchema = new mongoose.Schema({
   name: {
@@ -43,4 +43,4 @@ CustomerSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Customer', CustomerSchema);
+export default mongoose.model('Customer', CustomerSchema);

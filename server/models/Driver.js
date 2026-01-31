@@ -1,5 +1,5 @@
 // Driver Model
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const DriverSchema = new mongoose.Schema({
   name: {
@@ -49,4 +49,4 @@ DriverSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Driver', DriverSchema);
+export default mongoose.model('Driver', DriverSchema);

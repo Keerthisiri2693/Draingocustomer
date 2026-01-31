@@ -1,12 +1,12 @@
 // Admin routes
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Admin = require('../models/Admin');
-const Owner = require('../models/Owner');
-const Driver = require('../models/Driver');
-const Vehicle = require('../models/Vehicle');
-const Feedback = require('../models/Feedback');
-const Booking = require('../models/Booking');
+import Admin from '../models/Admin.js';
+import Owner from '../models/Owner.js';
+import Driver from '../models/Driver.js';
+import Vehicle from '../models/Vehicle.js';
+import Feedback from '../models/Feedback.js';
+import Booking from '../models/Booking.js';
 
 // Admin login
 router.post('/login', async (req, res) => {
@@ -237,5 +237,4 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-
-module.exports = router;
+export default router;

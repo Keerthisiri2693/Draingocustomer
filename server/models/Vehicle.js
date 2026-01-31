@@ -1,5 +1,5 @@
 // Vehicle Model
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const VehicleSchema = new mongoose.Schema({
   vehicleNumber: {
@@ -70,4 +70,4 @@ VehicleSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Vehicle', VehicleSchema);
+export default mongoose.model('Vehicle', VehicleSchema);

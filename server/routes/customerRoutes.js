@@ -1,11 +1,11 @@
 // Customer routes implementation
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Customer = require('../models/Customer');
-const Booking = require('../models/Booking');
-const Vehicle = require('../models/Vehicle');
-const Feedback = require('../models/Feedback');
-const { generateOTP, sendSMS } = require('../utils/otpUtils');
+import Customer from '../models/Customer.js';
+import Booking from '../models/Booking.js';
+import Vehicle from '../models/Vehicle.js';
+import Feedback from '../models/Feedback.js';
+import { generateOTP, sendSMS } from '../utils/otpUtils.js';
 
 // Customer registration
 router.post('/register', async (req, res) => {
@@ -162,5 +162,4 @@ router.put('/profile', async (req, res) => {
   }
 });
 
-
-module.exports = router;
+export default router;

@@ -1,10 +1,10 @@
 // Booking routes implementation
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Booking = require('../models/Booking');
-const Vehicle = require('../models/Vehicle');
-const Customer = require('../models/Customer');
-const { generateOTP } = require('../utils/otpUtils');
+import Booking from '../models/Booking.js';
+import Vehicle from '../models/Vehicle.js';
+import Customer from '../models/Customer.js';
+import { generateOTP } from '../utils/otpUtils.js';
 
 // Create new booking
 router.post('/create', async (req, res) => {
@@ -227,4 +227,4 @@ router.post('/payment-success', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

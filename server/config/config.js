@@ -1,5 +1,5 @@
 // Server configuration
-module.exports = {
+const config = {
   development: {
     port: process.env.PORT || 5000,
     mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/drain_app',
@@ -19,3 +19,5 @@ module.exports = {
     jwtExpire: process.env.JWT_EXPIRE || '1d',
   }
 };
+
+export default config;
