@@ -1,4 +1,10 @@
 {
   "name": "DrainGoCustomer",
-  "displayName": "DrainGoCustomer"
+  "displayName": "DrainGoCustomer",
+  "android": {
+    "package": "com.anonymous.draingocustomer"
+  },
+  "plugins": [
+    "@react-native-community/datetimepicker"
+  ]
 }

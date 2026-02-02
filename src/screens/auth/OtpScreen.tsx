@@ -12,8 +12,6 @@ import {
   TouchableWithoutFeedback,
   ScrollView,
 } from 'react-native';
-
-import SmsRetriever from 'react-native-sms-retriever';
 import { useTranslation } from 'react-i18next';
 import Button from '../../components/Button';
 import colors from '../../theme/colors';
@@ -30,6 +28,7 @@ const OtpScreen = ({ navigation, route }: any) => {
   const inputs = useRef<Array<TextInput | null>>([]);
   const phone = route?.params?.phone;
 
+  // Fade in
   useEffect(() => {
     Animated.timing(fade, {
       toValue: 1,
@@ -38,6 +37,7 @@ const OtpScreen = ({ navigation, route }: any) => {
     }).start();
   }, []);
 
+  // Resend timer
   useEffect(() => {
     if (!resendDisabled) return;
 
@@ -54,23 +54,14 @@ const OtpScreen = ({ navigation, route }: any) => {
     return () => clearInterval(interval);
   }, [resendDisabled]);
 
-  useEffect(() => {
-    const getOTP = async () => {
-      try {
-        const msg: any = await SmsRetriever.startSmsRetriever();
-        const match = String(msg || '').match(/\d{6}/);
-        if (match) setOtp(match[0].split(''));
-      } catch {}
-    };
-
-    if (Platform.OS === 'android') getOTP();
-  }, []);
-
   const handleChange = (text: string, index: number) => {
     const updated = [...otp];
     updated[index] = text;
     setOtp(updated);
-    if (text && index < 5) inputs.current[index + 1]?.focus();
+
+    if (text && index < 5) {
+      inputs.current[index + 1]?.focus();
+    }
   };
 
   const shakeAnimation = () => {
@@ -117,7 +108,7 @@ const OtpScreen = ({ navigation, route }: any) => {
               +91 {phone}
             </Text>
 
-            {/* OTP BOXES */}
+            {/* OTP INPUTS */}
             <Animated.View
               style={[styles.row, { transform: [{ translateX: shake }] }]}
             >
@@ -170,7 +161,6 @@ export default OtpScreen;
 const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
-    
   },
   container: {
     flex: 1,
@@ -186,8 +176,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginBottom: 6,
   },
-  text: { color: '#777' },
-  phone: { fontWeight: '700', marginBottom: 22 },
+  text: {
+    color: '#777',
+  },
+  phone: {
+    fontWeight: '700',
+    marginBottom: 22,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

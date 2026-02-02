@@ -1,17 +1,13 @@
-import { LogBox } from 'react-native';
-LogBox.ignoreLogs([
-  'i18next::pluralResolver',
-]);
-
-import '../src/localization/i18n';
-
 import React, { useEffect, useState } from 'react';
-import { StatusBar } from 'react-native';
+import { StatusBar, LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import i18n from '../src/localization/i18n';
 
-import Navigation from './navigation/index';
+import i18n from './localization/i18n';
+import Navigation from './navigation';
+
+// Ignore noisy i18n warning
+LogBox.ignoreLogs(['i18next::pluralResolver']);
 
 const App = () => {
   const [appReady, setAppReady] = useState(false);
@@ -33,9 +29,9 @@ const App = () => {
     loadLang();
   }, []);
 
-  // ⛔ Prevent rendering until language is loaded
+  // ⛔ Prevent rendering until language is ready
   if (!appReady) {
-    return null; // or splash loader if you want
+    return null; // you can replace with Splash loader later
   }
 
   return (
