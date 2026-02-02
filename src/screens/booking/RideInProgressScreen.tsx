@@ -1,69 +1,191 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView,StatusBar,Platform,  } from 'react-native';
+import React, { useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import colors from '../../theme/colors';
-import AppIcon from '../../components/AppIcon';
-import commonStyles from '../../theme/styles';
 
-const RideInProgressScreen = ({ navigation }: any) => {
-  const [minutes, setMinutes] = useState(0);
+const RideInProgressScreen = ({ navigation, route }: any) => {
+  const { t } = useTranslation(); // 🌍 i18n (TOP LEVEL)
+  const { vehicle, address, date } = route.params || {};
 
   useEffect(() => {
-    const t = setInterval(() => setMinutes((m) => m + 1), 60000);
-    return () => clearInterval(t);
+    const timer = setTimeout(() => {
+      navigation.replace('BookingCompleted', {
+        vehicle,
+        address,
+        date,
+      });
+    }, 6000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
-    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
-      Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
-    <View style={styles.container}>
-      <Text style={styles.statusText}>Service in progress</Text>
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
+        <Text style={styles.title}>
+          {t('cleaningInProgress')} 🧹
+        </Text>
 
-      <View style={styles.mapArea}>
-        <AppIcon type="ant" name="sync" size={28} color={colors.primary} />
-        <Text style={styles.mapText}>Cleaning in progress</Text>
-      </View>
+        <Text style={styles.subtitle}>
+          {t('cleaningStarted')}
+        </Text>
 
-      <View style={commonStyles.card}>
-        <View>
-          <Text style={styles.driverName}>Ramesh Kumar</Text>
-          <Text style={styles.vehicleInfo}>Lorry • TN 09 AB 4321</Text>
+        {/* MAP */}
+        <Image
+          source={require('../../assets/images/map.png')}
+          style={styles.map}
+          resizeMode="cover"
+        />
+
+        {/* STATUS CARD */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            {t('jobStatus')}
+          </Text>
+
+          <View style={styles.timeline}>
+            <View style={styles.dotActive} />
+            <Text style={styles.timelineText}>
+              {t('driverArrived')}
+            </Text>
+          </View>
+
+          <View style={styles.timeline}>
+            <View style={styles.dotActive} />
+            <Text style={styles.timelineText}>
+              {t('equipmentSetup')}
+            </Text>
+          </View>
+
+          <View style={styles.timeline}>
+            <View style={styles.dotPending} />
+            <Text style={styles.timelinePending}>
+              {t('cleaningInProgressStatus')}
+            </Text>
+          </View>
         </View>
-        <Text style={styles.timer}>{minutes} min</Text>
-      </View>
 
-      <TouchableOpacity
-        style={styles.completeBtn}
-        onPress={() => navigation.replace('BookingCompleted')}
-      >
-        <Text style={styles.completeText}>Complete Service</Text>
-      </TouchableOpacity>
-    </View>
+        {/* ACTIONS */}
+        <View style={styles.actionRow}>
+          <TouchableOpacity style={styles.actionBtn}>
+            <Text style={styles.actionText}>
+              {t('callDriver')}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionBtn}>
+            <Text style={styles.actionText}>
+              {t('support')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* CANCEL */}
+        <TouchableOpacity style={styles.cancelBtn}>
+          <Text style={styles.cancelText}>
+            {t('cancelBooking')}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 export default RideInProgressScreen;
 
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white, padding: 16 },
-  statusText: { fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 12 },
-  mapArea: {
-    flex: 1,
-    backgroundColor: '#EEE',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+  safe: { flex: 1, backgroundColor: '#fff' },
+
+  title: {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.primary,
+    marginTop: 8,
   },
-  mapText: { marginTop: 6, color: '#555' },
-  driverName: { fontSize: 15, fontWeight: '700' },
-  vehicleInfo: { fontSize: 12, color: '#777', marginTop: 4 },
-  timer: { fontWeight: '700', color: colors.primary },
-  completeBtn: {
-    marginTop: 16,
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
+
+  subtitle: {
+    textAlign: 'center',
+    color: '#666',
+    marginBottom: 10,
+  },
+
+  map: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    alignSelf: 'center',
+  },
+
+  card: {
+    margin: 16,
+    padding: 16,
     borderRadius: 14,
-    alignItems: 'center',
+    backgroundColor: '#F6F9FC',
   },
-  completeText: { color: colors.white, fontWeight: '700' },
+
+  sectionTitle: { fontWeight: '700', marginBottom: 10 },
+
+  timeline: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+
+  dotActive: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+    marginRight: 10,
+  },
+
+  dotPending: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#ccc',
+    marginRight: 10,
+  },
+
+  timelineText: { color: '#333', fontWeight: '600' },
+
+  timelinePending: { color: '#777' },
+
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 4,
+  },
+
+  actionBtn: {
+    backgroundColor: '#EAF7EF',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+  },
+
+  actionText: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+
+  cancelBtn: {
+    marginTop: 16,
+    marginHorizontal: 16,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#FFE8E6',
+  },
+
+  cancelText: {
+    textAlign: 'center',
+    color: '#D34B4B',
+    fontWeight: '700',
+  },
 });

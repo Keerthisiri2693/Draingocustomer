@@ -1,27 +1,107 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
-import Button from '../../components/Button';
+import React, { useEffect, useRef } from 'react';
+import {
+  Text,
+  StyleSheet,
+  Animated,
+  StatusBar,
+  Platform,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import LinearGradient from 'react-native-linear-gradient';
 import colors from '../../theme/colors';
 
 const SplashScreen = ({ navigation }: any) => {
+  const bounce = useRef(new Animated.Value(0)).current;
+  const fade = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // 🔹 Fade in
+    Animated.timing(fade, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+
+    // 🔹 Truck bounce
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounce, {
+          toValue: -6,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bounce, {
+          toValue: 0,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // 🔹 Decide navigation
+    const decideNext = async () => {
+      const firstLaunch = await AsyncStorage.getItem('FIRST_LAUNCH');
+      const loggedIn = await AsyncStorage.getItem('LOGGED_IN');
+
+      setTimeout(async () => {
+        // 🆕 FIRST TIME EVER
+        if (!firstLaunch) {
+          await AsyncStorage.setItem('FIRST_LAUNCH', 'true');
+          navigation.replace('LanguageSelect');
+          return;
+        }
+
+        // 🟢 LOGGED IN USER
+        if (loggedIn === 'true') {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Tabs' }],
+          });
+          return;
+        }
+
+        // 🟡 NORMAL LOGIN FLOW
+        navigation.replace('Login');
+      }, 1400);
+    };
+
+    decideNext();
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Drain Go</Text>
+    <LinearGradient
+      colors={['#F4FFF8', '#E8FDEE']}
+      style={styles.container}
+    >
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
 
-      {/* Vehicle Image */}
-      <Image
-        source={require('../../assets/images/truck.png')}
-        style={styles.image}
+      {/* TITLE */}
+      <Animated.Text style={[styles.title, { opacity: fade }]}>
+        Drain Go
+      </Animated.Text>
+
+      {/* TRUCK IMAGE */}
+      <Animated.Image
+        source={require('../../assets/images/sewage_truck.png')}
         resizeMode="contain"
+        style={[
+          styles.truckImage,
+          {
+            opacity: fade,
+            transform: [{ translateY: bounce }],
+          },
+        ]}
       />
 
-      <Text style={styles.subtitle}>Clean With Fullest</Text>
-
-      <Button
-        title="Get Started →"
-        onPress={() => navigation.replace('Login')}
-      />
-    </View>
+      {/* TAGLINE */}
+      <Animated.Text style={[styles.sub, { opacity: fade }]}>
+        On-demand septic & drainage cleaning
+      </Animated.Text>
+    </LinearGradient>
   );
 };
 
@@ -30,25 +110,24 @@ export default SplashScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 40,
     alignItems: 'center',
-    backgroundColor: colors.white,
-    padding: 20,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 26,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: '800',
     color: colors.primary,
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  image: {
-    width: 220,
-    height: 120,
+  truckImage: {
+    width: 280,
+    height: 160,
     marginVertical: 20,
   },
-  subtitle: {
-    fontSize: 16,
-    color: colors.gray,
-    marginBottom: 30,
+  sub: {
+    color: '#6E6E6E',
+    fontSize: 14,
+    marginTop: 6,
   },
 });

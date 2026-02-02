@@ -1,92 +1,129 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  Image,
   TouchableOpacity,
-  Animated,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import colors from '../../theme/colors';
-import AppIcon from '../../components/AppIcon';
 
-const BookingCompletedScreen = ({ navigation }: any) => {
-  const [rating, setRating] = useState(0);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+const BookingCompletedScreen = ({ navigation, route }: any) => {
+  const { t } = useTranslation(); // 🌍 i18n
+  const { vehicle, address, date } = route.params || {};
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
+  const handleDone = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Tabs' }],
+    });
+  };
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          opacity: fadeAnim,
-          transform: [
-            {
-              translateY: fadeAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [10, 0],
-              }),
-            },
-          ],
-        },
-      ]}
-    >
-      <AppIcon type="ant" name="checkcircle" size={56} color={colors.primary} />
-      <Text style={styles.title}>Service Completed</Text>
-      <Text style={styles.subTitle}>Thank you for using Drain Go</Text>
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        {/* Illustration */}
+        <Image
+          source={require('../../assets/images/success.png')}
+          style={styles.image}
+          resizeMode="contain"
+        />
 
-      <View style={styles.starRow}>
-        {[1, 2, 3, 4, 5].map((s) => (
-          <TouchableOpacity key={s} onPress={() => setRating(s)}>
-            <AppIcon
-              type="ant"
-              name={rating >= s ? 'star' : 'staro'}
-              size={32}
-              color="#FFC107"
-            />
-          </TouchableOpacity>
-        ))}
+        <Text style={styles.title}>
+          {t('cleaningCompleted')} 🎉
+        </Text>
+
+        <Text style={styles.subtitle}>
+          {t('thankYouMessage')}
+        </Text>
+
+        {/* Summary Card */}
+        <View style={styles.card}>
+          <Text style={styles.label}>{t('vehicle')}:</Text>
+          <Text style={styles.value}>{vehicle?.toUpperCase()}</Text>
+
+          <Text style={styles.label}>{t('location')}:</Text>
+          <Text style={styles.value}>{address}</Text>
+
+          <Text style={styles.label}>{t('date')}:</Text>
+          <Text style={styles.value}>{date}</Text>
+        </View>
+
+        {/* Button */}
+        <TouchableOpacity style={styles.btn} onPress={handleDone}>
+          <Text style={styles.btnText}>
+            {t('backToHome')} →
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[
-          styles.submitBtn,
-          rating === 0 && { opacity: 0.5 },
-        ]}
-        disabled={rating === 0}
-        onPress={() => navigation.replace('Tabs')}
-      >
-        <Text style={styles.submitText}>Submit</Text>
-      </TouchableOpacity>
-    </Animated.View>
+    </SafeAreaView>
   );
 };
 
 export default BookingCompletedScreen;
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+
   container: {
     flex: 1,
-    backgroundColor: colors.white,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
+    padding: 20,
   },
-  title: { fontSize: 20, fontWeight: '700', marginTop: 12 },
-  subTitle: { fontSize: 13, color: '#777', marginBottom: 24 },
-  starRow: { flexDirection: 'row', marginBottom: 30 },
-  submitBtn: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    paddingHorizontal: 40,
+
+  image: {
+    width: 220,
+    height: 200,
+    marginTop: 10,
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginTop: 10,
+    color: colors.primary,
+  },
+
+  subtitle: {
+    textAlign: 'center',
+    color: '#666',
+    marginTop: 6,
+    marginBottom: 14,
+  },
+
+  card: {
+    width: '100%',
+    padding: 16,
     borderRadius: 14,
+    backgroundColor: '#F5F8FC',
+    marginTop: 8,
   },
-  submitText: { color: colors.white, fontWeight: '700' },
+
+  label: {
+    fontWeight: '700',
+    marginTop: 10,
+  },
+
+  value: {
+    color: '#555',
+  },
+
+  btn: {
+    marginTop: 18,
+    width: '100%',
+    backgroundColor: colors.primary,
+    padding: 14,
+    borderRadius: 10,
+  },
+
+  btnText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '700',
+  },
 });

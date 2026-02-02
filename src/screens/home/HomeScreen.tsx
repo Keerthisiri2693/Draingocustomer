@@ -1,114 +1,179 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Animated,
   SafeAreaView,
   StatusBar,
   Platform,
+  Image,
+  Easing,
+  StyleSheet,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import colors from '../../theme/colors';
-import styles from '../../theme/styles';
+import stylesGlobal from '../../theme/styles';
 import AppIcon from '../../components/AppIcon';
 
-const HomeScreen = ({ navigation }: any) => {
-  return (
-    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
-      Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
+/* -------------------------------------------------- */
+/* ✅ COMPONENT                                       */
+/* -------------------------------------------------- */
 
-      <View style={styles.container}>
-        {/* HEADER */}
+const HomeScreen = ({ navigation }: any) => {
+  /* ---------- 🌍 i18n (MUST BE FIRST) ---------- */
+  const { t } = useTranslation();
+
+  /* ---------- 🎞️ Animations (ALL hooks together) ---------- */
+  const fadeHero = useRef(new Animated.Value(0)).current;
+  const slideHero = useRef(new Animated.Value(-20)).current;
+  const pulseCTA = useRef(new Animated.Value(1)).current;
+  const bounceLorry = useRef(new Animated.Value(0)).current;
+  const bounceTractor = useRef(new Animated.Value(0)).current;
+  const fadeFooter = useRef(new Animated.Value(0)).current;
+
+  /* ---------- 🎬 Effects ---------- */
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeHero, {
+        toValue: 1,
+        duration: 650,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideHero, {
+        toValue: 0,
+        duration: 650,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseCTA, {
+          toValue: 1.03,
+          duration: 900,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseCTA, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.spring(bounceLorry, {
+      toValue: 1,
+      friction: 6,
+      useNativeDriver: true,
+    }).start();
+
+    Animated.spring(bounceTractor, {
+      toValue: 1,
+      friction: 6,
+      delay: 150,
+      useNativeDriver: true,
+    }).start();
+
+    Animated.timing(fadeFooter, {
+      toValue: 1,
+      duration: 700,
+      delay: 300,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  /* -------------------------------------------------- */
+  /* 🖼️ UI                                             */
+  /* -------------------------------------------------- */
+
+  return (
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: colors.white,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+      }}
+    >
+      <ScrollView showsVerticalScrollIndicator={false}>
+
+        {/* 📍 LOCATION */}
         <View style={local.header}>
           <View>
-            <Text style={local.welcome}>Your Location</Text>
-            <Text style={local.location}>Pakkam, Thiruvallur</Text>
+            <Text style={local.welcome}>{t('yourLocation')}</Text>
+            <Text style={local.location}>{t('defaultLocation')}</Text>
           </View>
-
-          <AppIcon
-            type="ion"
-            name="location-outline"
-            size={26}
-            color={colors.primary}
-          />
+          <AppIcon type="ion" name="location-outline" size={26} color={colors.primary} />
         </View>
 
-        <ScrollView
-          contentContainerStyle={{ padding: 16 }}
-          showsVerticalScrollIndicator={false}
+        {/* 🎯 HERO */}
+        <Animated.View
+          style={[
+            local.heroWrap,
+            { opacity: fadeHero, transform: [{ translateY: slideHero }] },
+          ]}
         >
-          {/* MAIN CTA */}
-          <View style={[styles.card, local.ctaCard]}>
-            <AppIcon
-              type="fa5"
-              name="truck"
-              size={36}
-              color={colors.primary}
-            />
-            <Text style={local.ctaTitle}>
-              Need septic tank cleaning?
-            </Text>
-            <Text style={local.ctaSub}>
-              Book a nearby vehicle instantly
-            </Text>
+          <Image source={require('../../assets/images/banner.png')} style={local.hero} />
+        </Animated.View>
+
+        {/* 🚀 CTA */}
+        <Animated.View style={[local.cta, { transform: [{ scale: pulseCTA }] }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={local.ctaTitle}>{t('needCleaning')}</Text>
+            <Text style={local.ctaSub}>{t('serviceSubtitle')}</Text>
 
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={stylesGlobal.primaryButton}
               onPress={() => navigation.navigate('VehicleSelect')}
             >
-              <Text style={styles.primaryButtonText}>
-                Book Service
+              <Text style={stylesGlobal.primaryButtonText}>
+                {t('bookService')} →
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* VEHICLE OPTIONS */}
-          <Text style={local.sectionTitle}>Available Vehicles</Text>
+          <Image
+            source={require('../../assets/images/banner.png')}
+            style={local.ctaImg}
+          />
+        </Animated.View>
 
-          {/* LORRY CARD */}
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('VehicleSelect')}
-          >
-            <View style={local.vehicleRow}>
-              <AppIcon
-                type="fa5"
-                name="truck-moving"
-                size={28}
-                color={colors.primary}
-              />
-              <View>
-                <Text style={local.vehicleTitle}>Lorry</Text>
-                <Text style={local.vehicleSub}>
-                  Large capacity cleaning
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
+        {/* 🚛 VEHICLES */}
+        <Text style={local.sectionTitle}>{t('availableVehicles')}</Text>
 
-          {/* TRACTOR CARD */}
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('VehicleSelect')}
-          >
-            <View style={local.vehicleRow}>
-              <AppIcon
-                type="fa5"
-                name="tractor"
-                size={28}
-                color={colors.primary}
-              />
-              <View>
-                <Text style={local.vehicleTitle}>Tractor</Text>
-                <Text style={local.vehicleSub}>
-                  Small & quick service
-                </Text>
+        <View style={local.circleRow}>
+          <Animated.View style={{ transform: [{ scale: bounceLorry }] }}>
+            <TouchableOpacity onPress={() => navigation.navigate('VehicleSelect')}>
+              <View style={local.circleWrapper}>
+                <Image source={require('../../assets/images/lorry.png')} style={local.circleImg} />
               </View>
-            </View>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
+              <Text style={local.circleTitle}>{t('lorry')}</Text>
+              <Text style={local.capacity}>{t('lorryCapacity')}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          <Animated.View style={{ transform: [{ scale: bounceTractor }] }}>
+            <TouchableOpacity onPress={() => navigation.navigate('VehicleSelect')}>
+              <View style={local.circleWrapper}>
+                <Image source={require('../../assets/images/tractor.png')} style={local.circleImg} />
+              </View>
+              <Text style={local.circleTitle}>{t('tractor')}</Text>
+              <Text style={local.capacity}>{t('tractorCapacity')}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+
+        {/* 🏁 FOOTER */}
+        <Animated.Image
+          source={require('../../assets/images/godringo.png')}
+          style={[local.footerBanner, { opacity: fadeFooter }]}
+          resizeMode="contain"
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -123,50 +188,70 @@ const local = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  welcome: {
-    fontSize: 12,
-    color: '#777',
-  },
-  location: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-  },
-  ctaCard: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  ctaTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 12,
-    color: '#333',
-  },
-  ctaSub: {
-    fontSize: 13,
-    color: '#777',
-    marginVertical: 8,
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
-    color: '#3A2C1D',
-  },
-  vehicleRow: {
+
+  welcome: { fontSize: 12, color: '#777' },
+  location: { fontSize: 18, fontWeight: '800', color: '#222' },
+
+  heroWrap: { paddingHorizontal: 16, marginTop: 6 },
+  hero: { width: '100%', height: 190, borderRadius: 18 },
+
+  cta: {
+    margin: 16,
+    backgroundColor: '#E9FAEF',
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
-  vehicleTitle: {
+
+  ctaTitle: { fontSize: 18, fontWeight: '800', color: colors.primary },
+  ctaSub: { marginVertical: 6, color: '#555' },
+
+  ctaImg: { width: 100, height: 80, marginLeft: 10 },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 12,
+  },
+
+  circleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+    marginTop: 6,
+  },
+
+   circleWrapper: {
+     width: 120,
+  height: 120,
+  borderRadius: 60,
+  backgroundColor: '#ECF7EE',
+  alignItems: 'center',
+  justifyContent: 'center',
+  elevation: 5,
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  overflow: 'hidden',
+  },
+
+  circleImg: { width: 140, height: 140,resizeMode: 'contain',},
+
+  circleTitle: {
+    textAlign: 'center',
+    marginTop: 10,
+    fontWeight: '800',
     fontSize: 15,
-    fontWeight: '700',
-    color: '#333',
   },
-  vehicleSub: {
-    fontSize: 12,
-    color: '#777',
-    marginTop: 2,
+
+  capacity: { textAlign: 'center', fontSize: 12, color: '#777' },
+
+  footerBanner: {
+    width: '100%',
+    height: 220,
+    marginTop: 30,
   },
 });

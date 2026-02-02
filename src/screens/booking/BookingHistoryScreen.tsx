@@ -8,11 +8,12 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import colors from '../../theme/colors';
 
 interface BookingItem {
   id: string;
-  vehicle: string;
+  vehicle: 'Lorry' | 'Tractor';
   date: string;
   amount: string;
   status: 'Completed';
@@ -43,33 +44,43 @@ const bookings: BookingItem[] = [
 ];
 
 const BookingHistoryScreen = () => {
+  const { t } = useTranslation(); // 🌍 i18n
+
   const renderItem = ({ item }: { item: BookingItem }) => (
     <View style={styles.card}>
       <View>
-        <Text style={styles.vehicle}>{item.vehicle}</Text>
+        <Text style={styles.vehicle}>
+          {item.vehicle === 'Lorry' ? t('lorry') : t('tractor')}
+        </Text>
         <Text style={styles.date}>{item.date}</Text>
       </View>
 
       <View style={{ alignItems: 'flex-end' }}>
         <Text style={styles.amount}>{item.amount}</Text>
-        <Text style={styles.status}>{item.status}</Text>
+        <Text style={styles.status}>{t('completed')}</Text>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
-          Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
-    <View style={styles.container}>
-      <Text style={styles.title}>My Bookings</Text>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: colors.white,
+        paddingTop:
+          Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+      }}
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>{t('myBookings')}</Text>
 
-      <FlatList
-        data={bookings}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+        <FlatList
+          data={bookings}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
     </SafeAreaView>
   );
 };

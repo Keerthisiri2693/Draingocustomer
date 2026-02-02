@@ -1,45 +1,100 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView,StatusBar,Platform, } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import colors from '../../theme/colors';
-import AppIcon from '../../components/AppIcon';
-import commonStyles from '../../theme/styles';
 
-const DriverArrivedScreen = ({ navigation }: any) => {
+const DriverArrivedScreen = ({ navigation, route }: any) => {
+  const { t } = useTranslation(); // 🌍 i18n
+  const { vehicle, address, date } = route.params || {};
+
+  const formattedDate =
+    typeof date === 'string'
+      ? date
+      : date
+      ? new Date(date).toDateString()
+      : t('notScheduled');
+
+  const handleStartRide = () => {
+    navigation.replace('RideInProgress', {
+      vehicle,
+      address,
+      date: formattedDate,
+    });
+  };
+
   return (
-    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
-      Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
-    <View style={styles.container}>
-      <Text style={styles.statusText}>Driver has arrived</Text>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+        {/* TITLE */}
+        <Text style={styles.title}>
+          {t('driverArrivedTitle')} 🚚
+        </Text>
+        <Text style={styles.subtitle}>
+          {t('driverArrivedSub')}
+        </Text>
 
-      <View style={styles.mapArea}>
-        <AppIcon type="fa5" name="map-marker-alt" size={28} color={colors.primary} />
-        <Text style={styles.mapText}>Pickup location</Text>
-      </View>
+        {/* MAP */}
+        <Image
+          source={require('../../assets/images/map.png')}
+          style={styles.map}
+          resizeMode="cover"
+        />
 
-      <View style={commonStyles.card}>
-        <View>
-          <Text style={styles.driverName}>Ramesh Kumar</Text>
-          <Text style={styles.vehicleInfo}>Lorry • TN 09 AB 4321</Text>
+        {/* CARD */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            {t('driverDetails')}
+          </Text>
+
+          <View style={styles.row}>
+            <Image
+              source={require('../../assets/images/driver.png')}
+              style={styles.avatar}
+            />
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name}>Ravi Kumar</Text>
+              <Text style={styles.small}>
+                {t('driverRole')}
+              </Text>
+            </View>
+
+            <TouchableOpacity style={styles.callBtn}>
+              <Text style={styles.callText}>
+                {t('call')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.divider} />
+
+          <Text style={styles.label}>{t('vehicle')}:</Text>
+          <Text style={styles.value}>
+            {vehicle?.toUpperCase()}
+          </Text>
+
+          <Text style={styles.label}>{t('location')}:</Text>
+          <Text style={styles.value}>{address}</Text>
+
+          <Text style={styles.label}>{t('scheduled')}:</Text>
+          <Text style={styles.value}>{formattedDate}</Text>
         </View>
-        <Text style={styles.arrived}>Arrived</Text>
-      </View>
 
-      <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.smallBtn}>
-          <AppIcon type="material" name="call" color={colors.primary} />
+        {/* START */}
+        <TouchableOpacity style={styles.startBtn} onPress={handleStartRide}>
+          <Text style={styles.startText}>
+            {t('startCleaning')} →
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.smallBtn}>
-          <AppIcon type="material" name="massage" color={colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        style={styles.boardBtn}
-        onPress={() => navigation.replace('RideInProgress')}
-      >
-        <Text style={styles.boardText}>I’m boarding</Text>
-      </TouchableOpacity>
-    </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -47,31 +102,105 @@ const DriverArrivedScreen = ({ navigation }: any) => {
 export default DriverArrivedScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white, padding: 16 },
-  statusText: { fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 12 },
-  mapArea: {
+  safe: {
     flex: 1,
-    backgroundColor: '#EEE',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#fff',
   },
-  mapText: { marginTop: 6, color: '#555' },
-  driverName: { fontSize: 15, fontWeight: '700' },
-  vehicleInfo: { fontSize: 12, color: '#777', marginTop: 4 },
-  arrived: { fontSize: 13, fontWeight: '600', color: colors.primary },
-  actionsRow: { flexDirection: 'row', justifyContent: 'center', marginVertical: 12 },
-  smallBtn: {
-    marginHorizontal: 10,
-    padding: 12,
-    borderRadius: 50,
-    backgroundColor: '#F1F1F1',
+
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 5,
+    color: colors.primary,
   },
-  boardBtn: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
+
+  subtitle: {
+    textAlign: 'center',
+    color: '#666',
+    marginBottom: 8,
+  },
+
+  map: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    alignSelf: 'center',
+    marginTop: 6,
+  },
+
+  card: {
+    margin: 16,
+    padding: 16,
     borderRadius: 14,
+    backgroundColor: '#F6F9FC',
+  },
+
+  sectionTitle: {
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+
+  row: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  boardText: { color: colors.white, fontWeight: '700' },
+
+  avatar: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    marginRight: 12,
+  },
+
+  name: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  small: {
+    color: '#666',
+    marginTop: 2,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: '#E3E6EB',
+    marginVertical: 12,
+  },
+
+  label: {
+    marginTop: 8,
+    fontWeight: '600',
+  },
+
+  value: {
+    color: '#555',
+  },
+
+  callBtn: {
+    backgroundColor: '#E9F8EE',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+
+  callText: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+
+  startBtn: {
+    marginHorizontal: 16,
+    marginTop: 5,
+    backgroundColor: colors.primary,
+    padding: 14,
+    borderRadius: 10,
+  },
+
+  startText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '700',
+  },
 });

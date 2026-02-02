@@ -1,82 +1,140 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView,StatusBar,Platform, } from 'react-native';
-import colors from '../../theme/colors';
-import AppIcon from '../../components/AppIcon';
-import commonStyles from '../../theme/styles';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ImageBackground,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
 
-const DriverArrivingScreen = ({ navigation }: any) => {
+const DriverArrivingScreen = ({ route, navigation }: any) => {
+  const { t } = useTranslation(); // 🌍 i18n
+  const { vehicle, address, date } = route.params;
+
+  // ⏳ Auto navigate to DriverArrived
   useEffect(() => {
-    const t = setTimeout(() => {
-      navigation.replace('DriverArrived');
-    }, 5000);
+    const timer = setTimeout(() => {
+      navigation.replace('DriverArrived', { vehicle, address, date });
+    }, 6000);
 
-    return () => clearTimeout(t);
-  }, [navigation]);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ❌ Cancel with confirmation
+  const handleCancel = () => {
+    Alert.alert(
+      t('cancelRide'),
+      t('cancelRideConfirm'),
+      [
+        { text: t('no'), style: 'cancel' },
+        {
+          text: t('yesCancel'),
+          style: 'destructive',
+          onPress: () => navigation.navigate('Booking'),
+        },
+      ],
+    );
+  };
 
   return (
-    <SafeAreaView style={{flex: 1,backgroundColor: colors.white,paddingTop:
-      Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
     <View style={styles.container}>
-      <Text style={styles.statusText}>Driver is arriving now</Text>
+      {/* MAP PLACEHOLDER */}
+      <ImageBackground
+        source={require('../../assets/images/map-placeholder.png')}
+        style={styles.mapBg}
+      />
 
-      <View style={styles.mapArea}>
-        <AppIcon type="fa5" name="truck-moving" size={32} color={colors.primary} />
-        <Text style={styles.mapText}>Driver en route</Text>
+      {/* PIN */}
+      <View style={styles.pinWrapper}>
+        <Icon name="place" size={44} color="#2ecc71" />
       </View>
 
-      <View style={commonStyles.card}>
-        <View>
-          <Text style={styles.driverName}>Ramesh Kumar</Text>
-          <Text style={styles.vehicleInfo}>Lorry • TN 09 AB 4321</Text>
-        </View>
-        <Text style={styles.eta}>ETA: 5 mins</Text>
+      {/* LOADING */}
+      <View style={styles.centerOverlay}>
+        <ActivityIndicator size="large" color="#1DB954" />
+        <Text style={styles.searchText}>
+          {t('searchingDrivers')}
+        </Text>
       </View>
 
-      <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.actionBtn}>
-          <View style={styles.actionContent}>
-            <AppIcon type="material" name="call" color={colors.primary} />
-            <Text style={styles.actionText}>Call</Text>
-          </View>
-        </TouchableOpacity>
+      {/* BOTTOM CARD */}
+      <View style={styles.bottomCard}>
+        <Text style={styles.label}>{t('vehicle')}:</Text>
+        <Text style={styles.value}>{vehicle}</Text>
 
-        <TouchableOpacity style={styles.actionBtn}>
-          <View style={styles.actionContent}>
-            <AppIcon type="material" name="message" color={colors.primary} />
-            <Text style={styles.actionText}>Chat</Text>
-          </View>
+        <Text style={styles.label}>{t('pickup')}:</Text>
+        <Text style={styles.value}>{address}</Text>
+
+        <Text style={styles.label}>{t('scheduled')}:</Text>
+        <Text style={styles.value}>{String(date)}</Text>
+
+        <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
+          <Text style={styles.cancelText}>
+            {t('cancelRide')}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
-    </SafeAreaView>
   );
 };
 
 export default DriverArrivingScreen;
 
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white, padding: 16 },
-  statusText: {
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 12,
-    color: '#3A2C1D',
-  },
-  mapArea: {
+  container: { flex: 1 },
+
+  mapBg: {
     flex: 1,
-    backgroundColor: '#EEE',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+    width: '100%',
+    height: '100%',
   },
-  mapText: { marginTop: 8, color: '#555' },
-  driverName: { fontSize: 15, fontWeight: '700', color: '#333' },
-  vehicleInfo: { fontSize: 12, color: '#777', marginTop: 4 },
-  eta: { fontSize: 13, fontWeight: '600', color: colors.primary },
-  actionsRow: { flexDirection: 'row', marginTop: 12 },
-  actionBtn: { flex: 1, marginHorizontal: 6 },
-  actionContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  actionText: { fontSize: 13, fontWeight: '600', color: '#333' },
+
+  pinWrapper: {
+    position: 'absolute',
+    top: '35%',
+    alignSelf: 'center',
+  },
+
+  centerOverlay: {
+    position: 'absolute',
+    top: '45%',
+    alignSelf: 'center',
+    alignItems: 'center',
+  },
+
+  searchText: {
+    marginTop: 8,
+    fontWeight: '600',
+    color: '#1DB954',
+    fontSize: 15,
+  },
+
+  bottomCard: {
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    backgroundColor: '#F7F8FA',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    elevation: 10,
+  },
+
+  label: { fontWeight: '700', marginTop: 10 },
+  value: { color: '#444', marginTop: 2 },
+
+  cancelBtn: {
+    marginTop: 18,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#ff4d4d',
+    alignItems: 'center',
+  },
+
+  cancelText: { color: '#fff', fontWeight: '700' },
 });
