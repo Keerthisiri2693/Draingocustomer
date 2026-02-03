@@ -1,0 +1,166 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import colors from '../../theme/colors';
+
+const TermsConditionsScreen = ({ onLoginSuccess }: any) => {
+  const { t } = useTranslation();
+
+  const [accepted, setAccepted] = useState(false);
+  const [scrolledToEnd, setScrolledToEnd] = useState(false);
+
+  /* 🔁 SKIP IF TERMS ALREADY ACCEPTED */
+  useEffect(() => {
+    const checkTerms = async () => {
+      const acceptedBefore = await AsyncStorage.getItem('TERMS_ACCEPTED');
+      if (acceptedBefore === 'true') {
+        onLoginSuccess?.();
+      }
+    };
+    checkTerms();
+  }, []);
+
+  const handleScroll = ({ nativeEvent }: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+    const isBottom =
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - 20;
+
+    if (isBottom) setScrolledToEnd(true);
+  };
+
+  const handleAccept = async () => {
+    if (!accepted) return;
+
+    await AsyncStorage.setItem('TERMS_ACCEPTED', 'true');
+    onLoginSuccess?.();
+  };
+
+  return (
+    <SafeAreaView edges={['top']} style={styles.container}>
+      {/* TITLE */}
+      <Text style={styles.title}>
+        {t('termsTitle')}
+      </Text>
+
+      {/* TERMS CONTENT */}
+      <ScrollView
+        style={styles.box}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: 30 }}
+        showsVerticalScrollIndicator
+      >
+        <Text style={styles.section}>
+          {t('termsAppTitle')}
+        </Text>
+
+        <Text style={styles.text}>
+          {t('termsContent')}
+        </Text>
+      </ScrollView>
+
+      {/* ACCEPT SECTION */}
+      {scrolledToEnd && (
+        <View style={styles.acceptBox}>
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setAccepted(!accepted)}
+          >
+            <View style={[styles.checkbox, accepted && styles.checked]} />
+            <Text style={styles.checkboxText}>
+              {t('acceptTerms')}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            disabled={!accepted}
+            style={[
+              styles.button,
+              { backgroundColor: accepted ? colors.primary : '#ccc' },
+            ]}
+            onPress={handleAccept}
+          >
+            <Text style={styles.buttonText}>
+              {t('acceptContinue')} →
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </SafeAreaView>
+  );
+};
+
+export default TermsConditionsScreen;
+
+/* ---------- STYLES ---------- */
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 16,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.primary,
+    marginBottom: 10,
+  },
+  box: {
+    flex: 1,
+    backgroundColor: '#F7F9FB',
+    borderRadius: 14,
+    padding: 14,
+  },
+  section: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  text: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#444',
+  },
+  acceptBox: {
+    marginTop: 14,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    marginRight: 10,
+  },
+  checked: {
+    backgroundColor: colors.primary,
+  },
+  checkboxText: {
+    fontWeight: '600',
+    flex: 1,
+  },
+  button: {
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '800',
+  },
+});
