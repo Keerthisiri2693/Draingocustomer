@@ -1,50 +1,96 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   Animated,
-  SafeAreaView,
   StatusBar,
-  Platform,
   Image,
   Easing,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+
+import * as Location from 'expo-location';
 
 import colors from '../../theme/colors';
 import stylesGlobal from '../../theme/styles';
 import AppIcon from '../../components/AppIcon';
 
-/* -------------------------------------------------- */
-/* ✅ COMPONENT                                       */
-/* -------------------------------------------------- */
+// 🔹 Optional imports if you want tab switching
+ import BookingScreen from '../booking/BookingScreen';
+ import ProfileScreen from '../profile/ProfileScreen';
 
 const HomeScreen = ({ navigation }: any) => {
-  /* ---------- 🌍 i18n (MUST BE FIRST) ---------- */
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
-  /* ---------- 🎞️ Animations (ALL hooks together) ---------- */
+  /* ---------------- STATE ---------------- */
+  const [currentLocation, setCurrentLocation] = useState(
+    t('Fetching location...')
+  );
+  const [activeTab, setActiveTab] = useState<'home' | 'bookings' | 'profile'>(
+    'home'
+  );
+
+  /* ---------------- LOCATION ---------------- */
+  const fetchCurrentLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setCurrentLocation(t('Location permission denied'));
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const address = await Location.reverseGeocodeAsync(
+        location.coords
+      );
+
+      if (address.length > 0) {
+        const place = address[0];
+        setCurrentLocation(
+          `${place.city || place.subregion || ''}, ${place.region || ''}`
+        );
+      }
+    } catch {
+      setCurrentLocation(t('Unable to fetch location'));
+    }
+  };
+
+  const tabs = [
+  { key: 'home', icon: 'home', label: 'Home', route: 'HomeScreen' },
+  { key: 'BookingScreen', icon: 'calendar', label: 'Bookings', route: 'BookingScreen' },
+  { key: 'Booking History' ,icon: 'list', label: 'Booking History', route:'BookingHistoryScreen'},
+  { key: 'profile', icon: 'person', label: 'Profile', route: 'ProfileScreen' },
+];
+
+  /* ---------------- ANIMATIONS ---------------- */
   const fadeHero = useRef(new Animated.Value(0)).current;
   const slideHero = useRef(new Animated.Value(-20)).current;
   const pulseCTA = useRef(new Animated.Value(1)).current;
-  const bounceLorry = useRef(new Animated.Value(0)).current;
-  const bounceTractor = useRef(new Animated.Value(0)).current;
-  const fadeFooter = useRef(new Animated.Value(0)).current;
 
-  /* ---------- 🎬 Effects ---------- */
   useEffect(() => {
+    fetchCurrentLocation();
+
     Animated.parallel([
       Animated.timing(fadeHero, {
         toValue: 1,
-        duration: 650,
+        duration: 600,
         useNativeDriver: true,
       }),
       Animated.timing(slideHero, {
         toValue: 0,
-        duration: 650,
+        duration: 600,
         useNativeDriver: true,
       }),
     ]).start();
@@ -52,7 +98,7 @@ const HomeScreen = ({ navigation }: any) => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseCTA, {
-          toValue: 1.03,
+          toValue: 1.04,
           duration: 900,
           easing: Easing.out(Easing.ease),
           useNativeDriver: true,
@@ -60,198 +106,226 @@ const HomeScreen = ({ navigation }: any) => {
         Animated.timing(pulseCTA, {
           toValue: 1,
           duration: 900,
-          easing: Easing.out(Easing.ease),
           useNativeDriver: true,
         }),
       ])
     ).start();
-
-    Animated.spring(bounceLorry, {
-      toValue: 1,
-      friction: 6,
-      useNativeDriver: true,
-    }).start();
-
-    Animated.spring(bounceTractor, {
-      toValue: 1,
-      friction: 6,
-      delay: 150,
-      useNativeDriver: true,
-    }).start();
-
-    Animated.timing(fadeFooter, {
-      toValue: 1,
-      duration: 700,
-      delay: 300,
-      useNativeDriver: true,
-    }).start();
   }, []);
 
-  /* -------------------------------------------------- */
-  /* 🖼️ UI                                             */
-  /* -------------------------------------------------- */
-
+  /* ================= UI ================= */
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: colors.white,
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-      }}
-    >
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
 
-        {/* 📍 LOCATION */}
-        <View style={local.header}>
-          <View>
-            <Text style={local.welcome}>{t('yourLocation')}</Text>
-            <Text style={local.location}>{t('defaultLocation')}</Text>
+      {/* 🔝 HEADER */}
+      <View style={[styles.toolbar, { paddingTop: insets.top + 8 }]}>
+        <TouchableOpacity style={styles.locationBlock}>
+          <View style={styles.locationRow}>
+            <AppIcon type="ion" name="location-outline" size={16} color={colors.primary} />
+            <Text style={styles.locationTitle}>{t('Home')}</Text>
+            <AppIcon type="ion" name="chevron-down" size={14} color="#555" />
           </View>
-          <AppIcon type="ion" name="location-outline" size={26} color={colors.primary} />
-        </View>
+          <Text style={styles.locationSubtitle} numberOfLines={1}>
+            {currentLocation}
+          </Text>
+        </TouchableOpacity>
 
-        {/* 🎯 HERO */}
+        <TouchableOpacity
+          style={styles.searchPill}
+          onPress={() => navigation.navigate('SearchScreen')}
+        >
+          <AppIcon type="ion" name="search-outline" size={18} color="#666" />
+          <Text style={styles.searchText}>{t('Search services')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 📜 CONTENT */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
         <Animated.View
           style={[
-            local.heroWrap,
+            styles.heroWrap,
             { opacity: fadeHero, transform: [{ translateY: slideHero }] },
           ]}
         >
-          <Image source={require('../../assets/images/banner.png')} style={local.hero} />
+          <Image source={require('../../assets/images/banner.png')} style={styles.hero} />
         </Animated.View>
 
-        {/* 🚀 CTA */}
-        <Animated.View style={[local.cta, { transform: [{ scale: pulseCTA }] }]}>
+        <Animated.View style={[styles.cta, { transform: [{ scale: pulseCTA }] }]}>
           <View style={{ flex: 1 }}>
-            <Text style={local.ctaTitle}>{t('needCleaning')}</Text>
-            <Text style={local.ctaSub}>{t('serviceSubtitle')}</Text>
+            <Text style={styles.ctaTitle}>{t('Need Cleaning')}</Text>
+            <Text style={styles.ctaSub}>{t('Fast & reliable service')}</Text>
 
             <TouchableOpacity
               style={stylesGlobal.primaryButton}
-              onPress={() => navigation.navigate('VehicleSelect')}
+              onPress={() => navigation.navigate('BookingScreen')}
             >
               <Text style={stylesGlobal.primaryButtonText}>
-                {t('bookService')} →
+                {t('Book Service')} →
               </Text>
             </TouchableOpacity>
           </View>
 
           <Image
             source={require('../../assets/images/banner.png')}
-            style={local.ctaImg}
+            style={styles.ctaImg}
           />
         </Animated.View>
 
-        {/* 🚛 VEHICLES */}
-        <Text style={local.sectionTitle}>{t('availableVehicles')}</Text>
+        <Text style={styles.sectionTitle}>{t('Available Vehicles')}</Text>
 
-        <View style={local.circleRow}>
-          <Animated.View style={{ transform: [{ scale: bounceLorry }] }}>
-            <TouchableOpacity onPress={() => navigation.navigate('VehicleSelect')}>
-              <View style={local.circleWrapper}>
-                <Image source={require('../../assets/images/lorry.png')} style={local.circleImg} />
+        <View style={styles.circleRow}>
+          {[
+            { title: 'Lorry', cap: 'High capacity', img: 'lorry' },
+            { title: 'Tractor', cap: 'Medium capacity', img: 'tractor' },
+          ].map((v) => (
+            <TouchableOpacity key={v.title} style={{ alignItems: 'center' }} onPress={() => navigation.navigate('BookingScreen')}>
+              <View style={styles.circleWrapper}>
+                <Image
+                  source={
+                    v.img === 'lorry'
+                      ? require('../../assets/images/lorry.png')
+                      : require('../../assets/images/tractor.png')
+                  }
+                  style={styles.circleImg}
+                />
               </View>
-              <Text style={local.circleTitle}>{t('lorry')}</Text>
-              <Text style={local.capacity}>{t('lorryCapacity')}</Text>
+              <Text style={styles.circleTitle}>{t(v.title)}</Text>
+              <Text style={styles.capacity}>{t(v.cap)}</Text>
             </TouchableOpacity>
-          </Animated.View>
-
-          <Animated.View style={{ transform: [{ scale: bounceTractor }] }}>
-            <TouchableOpacity onPress={() => navigation.navigate('VehicleSelect')}>
-              <View style={local.circleWrapper}>
-                <Image source={require('../../assets/images/tractor.png')} style={local.circleImg} />
-              </View>
-              <Text style={local.circleTitle}>{t('tractor')}</Text>
-              <Text style={local.capacity}>{t('tractorCapacity')}</Text>
-            </TouchableOpacity>
-          </Animated.View>
+          ))}
         </View>
-
-        {/* 🏁 FOOTER */}
-        <Animated.Image
-          source={require('../../assets/images/godringo.png')}
-          style={[local.footerBanner, { opacity: fadeFooter }]}
-          resizeMode="contain"
-        />
       </ScrollView>
+
+      {/* 🔽 IN-PAGE FLOATING BOTTOM NAV */}
+<View style={[styles.bottomNav, { bottom: insets.bottom + 12 }]}>
+  {tabs.map((tab) => {
+    const active = activeTab === tab.key;
+
+    return (
+      <TouchableOpacity
+        key={tab.key}                     // ✅ required
+        style={styles.tabItem}
+        activeOpacity={0.8}
+        onPress={() => {
+          setActiveTab(tab.key);
+          navigation.navigate(tab.route); // ✅ correct route
+        }}
+      >
+        <AppIcon
+          type="ion"
+          name={active ? tab.icon : `${tab.icon}-outline`} // ✅ FIXED
+          size={22}
+          color={active ? colors.primary : '#9CA3AF'}      // ✅ FIXED
+        />
+
+        <Text
+          style={[
+            styles.tabText,
+            active && styles.tabActive,
+          ]}
+        >
+          {tab.label}
+        </Text>
+      </TouchableOpacity>
+    );
+  })}
+</View>
+
+
+
     </SafeAreaView>
   );
 };
 
 export default HomeScreen;
 
-const local = StyleSheet.create({
-  header: {
+/* ================= STYLES ================= */
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#fff' },
+
+  toolbar: {
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingBottom: 14,
+    elevation: 6,
   },
 
-  welcome: { fontSize: 12, color: '#777' },
-  location: { fontSize: 18, fontWeight: '800', color: '#222' },
+  locationBlock: { marginBottom: 12 },
+  locationRow: { flexDirection: 'row', alignItems: 'center' },
+  locationTitle: { fontSize: 14, fontWeight: '800', marginHorizontal: 6 },
+  locationSubtitle: { fontSize: 12, color: '#666', marginLeft: 22 },
 
-  heroWrap: { paddingHorizontal: 16, marginTop: 6 },
-  hero: { width: '100%', height: 190, borderRadius: 18 },
+  searchPill: {
+    flexDirection: 'row',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 14,
+    padding: 10,
+    alignItems: 'center',
+  },
+  searchText: { marginLeft: 8, color: '#777' },
+
+  heroWrap: { margin: 16, borderRadius: 18, overflow: 'hidden' },
+  hero: { width: '100%', height: 190 },
 
   cta: {
     margin: 16,
     backgroundColor: '#E9FAEF',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
     flexDirection: 'row',
-    alignItems: 'center',
   },
-
   ctaTitle: { fontSize: 18, fontWeight: '800', color: colors.primary },
-  ctaSub: { marginVertical: 6, color: '#555' },
+  ctaSub: { marginVertical: 6 },
+  ctaImg: { width: 100, height: 80 },
 
-  ctaImg: { width: 100, height: 80, marginLeft: 10 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', margin: 16 },
 
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginHorizontal: 16,
-    marginTop: 10,
-    marginBottom: 12,
+  circleRow: { flexDirection: 'row', justifyContent: 'space-around' },
+  circleWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#ECF7EE',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  circleImg: { width: 140, height: 140 },
+  circleTitle: { marginTop: 10, fontWeight: '800' },
+  capacity: { fontSize: 12, color: '#777' },
 
-  circleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 20,
-    marginTop: 6,
-  },
+bottomNav: {
+  position: 'absolute',
+  left: 16,
+  right: 16,
+  height: 72,
+  backgroundColor: '#fff',
+  borderRadius: 20,
+  flexDirection: 'row',
+  elevation: 12,
+  shadowColor: '#000',
+  shadowOpacity: 0.15,
+  shadowRadius: 10,
+},
 
-   circleWrapper: {
-     width: 120,
-  height: 120,
-  borderRadius: 60,
-  backgroundColor: '#ECF7EE',
+tabItem: {
+  flex: 1,
   alignItems: 'center',
   justifyContent: 'center',
-  elevation: 5,
-  shadowColor: '#000',
-  shadowOpacity: 0.1,
-  shadowRadius: 8,
-  overflow: 'hidden',
-  },
+},
 
-  circleImg: { width: 140, height: 140,resizeMode: 'contain',},
+tabText: {
+  fontSize: 11,
+  color: '#9CA3AF',
+  marginTop: 4,
+},
 
-  circleTitle: {
-    textAlign: 'center',
-    marginTop: 10,
-    fontWeight: '800',
-    fontSize: 15,
-  },
+tabActive: {
+  color: colors.primary,
+  fontWeight: '700',
+},
 
-  capacity: { textAlign: 'center', fontSize: 12, color: '#777' },
-
-  footerBanner: {
-    width: '100%',
-    height: 220,
-    marginTop: 30,
-  },
+  
 });

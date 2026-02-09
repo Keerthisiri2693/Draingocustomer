@@ -17,7 +17,7 @@ const RideInProgressScreen = ({ navigation, route }: any) => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace('BookingCompleted', {
+      navigation.replace('BookingCompletedScreen', {
         vehicle,
         address,
         date,

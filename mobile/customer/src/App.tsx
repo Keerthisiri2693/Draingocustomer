@@ -1,45 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar, LogBox } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationContainer } from '@react-navigation/native';
 
-import i18n from './localization/i18n';
-import Navigation from './navigation';
+import BottomTabs from '../src/navigation/BottomTabs';
+import { initI18n } from '../src/i18n/i18n';
 
-// Ignore noisy i18n warning
-LogBox.ignoreLogs(['i18next::pluralResolver']);
-
-const App = () => {
-  const [appReady, setAppReady] = useState(false);
+export default function App() {
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const loadLang = async () => {
-      try {
-        const lang = await AsyncStorage.getItem('APP_LANG');
-        if (lang) {
-          await i18n.changeLanguage(lang);
-        }
-      } catch (e) {
-        console.log('Language load error', e);
-      } finally {
-        setAppReady(true);
-      }
-    };
-
-    loadLang();
+    initI18n().then(() => setReady(true));
   }, []);
 
-  // ⛔ Prevent rendering until language is ready
-  if (!appReady) {
-    return null; // you can replace with Splash loader later
-  }
+  if (!ready) return null; // or splash / loader
 
   return (
-    <SafeAreaProvider style={{ flex: 1 }}>
-      <StatusBar barStyle="dark-content" />
-      <Navigation />
-    </SafeAreaProvider>
+    <NavigationContainer>
+      <BottomTabs />
+    </NavigationContainer>
   );
-};
-
-export default App;
+}

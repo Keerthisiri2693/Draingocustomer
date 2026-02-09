@@ -69,7 +69,7 @@ const VehicleSelect = ({ navigation }: any) => {
 
     setTimeout(() => {
       setLoading(false);
-      navigation.navigate('Booking', { vehicle: selected });
+      navigation.navigate('BookingScreen', { vehicle: selected });
     }, 800);
   };
 

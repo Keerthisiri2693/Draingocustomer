@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Drain Go",
+    "slug": "drain-go",
+    "android": {
+       "softwareKeyboardLayoutMode": "resize",
+      "package": "com.keerthi2693.draincustomer",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "ios": {
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We need your location to show nearby services.",
+        "NSCameraUsageDescription": "We need camera access to upload photos.",
+        "NSPhotoLibraryUsageDescription": "We need gallery access to select images."
+      }
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ]
+  }
+}

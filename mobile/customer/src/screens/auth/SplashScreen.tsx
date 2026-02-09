@@ -1,76 +1,104 @@
 import React, { useEffect, useRef } from 'react';
 import {
+  View,
   Text,
   StyleSheet,
   Animated,
   StatusBar,
-  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import colors from '../../theme/colors';
 
 const SplashScreen = ({ navigation }: any) => {
-  const bounce = useRef(new Animated.Value(0)).current;
   const fade = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(60)).current;
+  const scale = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
-    // 🔹 Fade in
-    Animated.timing(fade, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: true,
-    }).start();
-
-    // 🔹 Truck bounce
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(bounce, {
-          toValue: -6,
-          duration: 900,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bounce, {
+    // 🎬 VERY CLEAR SEQUENTIAL ANIMATION
+    Animated.sequence([
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 900,      // 👈 slow fade
+        useNativeDriver: true,
+      }),
+      Animated.parallel([
+        Animated.timing(translateY, {
           toValue: 0,
-          duration: 900,
+          duration: 900,    // 👈 slow float up
           useNativeDriver: true,
         }),
-      ])
-    ).start();
-
-    // 🔹 Decide navigation
-    const decideNext = async () => {
-      const firstLaunch = await AsyncStorage.getItem('FIRST_LAUNCH');
-      const loggedIn = await AsyncStorage.getItem('LOGGED_IN');
-
-      setTimeout(async () => {
-        // 🆕 FIRST TIME EVER
-        if (!firstLaunch) {
-          await AsyncStorage.setItem('FIRST_LAUNCH', 'true');
-          navigation.replace('LanguageSelect');
-          return;
-        }
-
-        // 🟢 LOGGED IN USER
-        if (loggedIn === 'true') {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Tabs' }],
-          });
-          return;
-        }
-
-        // 🟡 NORMAL LOGIN FLOW
-        navigation.replace('Login');
-      }, 1400);
-    };
+        Animated.spring(scale, {
+          toValue: 1,
+          friction: 8,      // 👈 smooth settle
+          tension: 40,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start(() => {
+      // 🌬 subtle breathing pulse
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scale, {
+            toValue: 1.03,
+            duration: 1200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 1,
+            duration: 1200,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    });
 
     decideNext();
   }, []);
 
+  const decideNext = async () => {
+    try {
+      const firstLaunch = await AsyncStorage.getItem('FIRST_LAUNCH');
+      const permissionDone = await AsyncStorage.getItem('PERMISSION_DONE');
+      const languageSelected = await AsyncStorage.getItem('LANGUAGE_SELECTED');
+      const loggedIn = await AsyncStorage.getItem('LOGGED_IN');
+
+      setTimeout(async () => {
+        if (!firstLaunch) {
+          await AsyncStorage.setItem('FIRST_LAUNCH', 'true');
+          navigation.replace('Permission');
+          return;
+        }
+
+        if (!permissionDone) {
+          navigation.replace('Permission');
+          return;
+        }
+
+        if (!languageSelected) {
+          navigation.replace('Language');
+          return;
+        }
+
+        if (loggedIn === 'true') {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Map' }],
+          });
+          return;
+        }
+
+        navigation.replace('Login');
+      }, 2400); // 👈 longer splash time
+    } catch {
+      navigation.replace('Login');
+    }
+  };
+
   return (
     <LinearGradient
-      colors={['#F4FFF8', '#E8FDEE']}
+      colors={['#F5FFF9', '#E6F6ED']}
       style={styles.container}
     >
       <StatusBar
@@ -79,55 +107,68 @@ const SplashScreen = ({ navigation }: any) => {
         barStyle="dark-content"
       />
 
-      {/* TITLE */}
-      <Animated.Text style={[styles.title, { opacity: fade }]}>
-        Drain Go
-      </Animated.Text>
-
-      {/* TRUCK IMAGE */}
-      <Animated.Image
-        source={require('../../assets/images/sewage_truck.png')}
-        resizeMode="contain"
+      <Animated.View
         style={[
-          styles.truckImage,
+          styles.content,
           {
             opacity: fade,
-            transform: [{ translateY: bounce }],
+            transform: [
+              { translateY },
+              { scale },
+            ],
           },
         ]}
-      />
+      >
+        <Animated.Image
+          source={require('../../assets/images/logo.png')}
+          resizeMode="contain"
+          style={styles.logo}
+        />
 
-      {/* TAGLINE */}
-      <Animated.Text style={[styles.sub, { opacity: fade }]}>
-        On-demand septic & drainage cleaning
-      </Animated.Text>
+        <Text style={styles.title}>Drain Go</Text>
+
+        <Text style={styles.subtitle}>
+          Professional septic & drainage services
+        </Text>
+      </Animated.View>
     </LinearGradient>
   );
 };
 
 export default SplashScreen;
 
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 40,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
+
+  content: {
+    alignItems: 'center',
+  },
+
+  logo: {
+    width: 300,
+    height: 220,
+    marginBottom: 32,
+  },
+
   title: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 30,
+    fontWeight: '700',
     color: colors.primary,
-    marginBottom: 16,
+    marginBottom: 8,
+    letterSpacing: 0.4,
   },
-  truckImage: {
-    width: 280,
-    height: 160,
-    marginVertical: 20,
-  },
-  sub: {
-    color: '#6E6E6E',
+
+  subtitle: {
     fontSize: 14,
-    marginTop: 6,
+    color: '#6B6B6B',
+    textAlign: 'center',
+    paddingHorizontal: 36,
+    lineHeight: 20,
   },
 });

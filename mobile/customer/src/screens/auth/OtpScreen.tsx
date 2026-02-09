@@ -17,7 +17,7 @@ import Button from '../../components/Button';
 import colors from '../../theme/colors';
 
 const OtpScreen = ({ navigation, route }: any) => {
-  const { t } = useTranslation(); // 🌐 i18n
+  const { t } = useTranslation();
   const fade = useRef(new Animated.Value(0)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
@@ -26,15 +26,19 @@ const OtpScreen = ({ navigation, route }: any) => {
   const [resendDisabled, setResendDisabled] = useState(true);
 
   const inputs = useRef<Array<TextInput | null>>([]);
-  const phone = route?.params?.phone;
+  const phone = route?.params?.phone ?? '';
 
-  // Fade in
+  // Fade in + focus first input
   useEffect(() => {
     Animated.timing(fade, {
       toValue: 1,
       duration: 450,
       useNativeDriver: true,
     }).start();
+
+    setTimeout(() => {
+      inputs.current[0]?.focus();
+    }, 300);
   }, []);
 
   // Resend timer
@@ -42,12 +46,13 @@ const OtpScreen = ({ navigation, route }: any) => {
     if (!resendDisabled) return;
 
     const interval = setInterval(() => {
-      setTimer((t) => {
-        if (t === 1) {
-          setResendDisabled(false);
+      setTimer((prev) => {
+        if (prev <= 1) {
           clearInterval(interval);
+          setResendDisabled(false);
+          return 0;
         }
-        return t - 1;
+        return prev - 1;
       });
     }, 1000);
 
@@ -55,6 +60,8 @@ const OtpScreen = ({ navigation, route }: any) => {
   }, [resendDisabled]);
 
   const handleChange = (text: string, index: number) => {
+    if (!/^\d?$/.test(text)) return; // digits only
+
     const updated = [...otp];
     updated[index] = text;
     setOtp(updated);
@@ -66,18 +73,29 @@ const OtpScreen = ({ navigation, route }: any) => {
 
   const shakeAnimation = () => {
     Animated.sequence([
-      Animated.timing(shake, { toValue: 10, duration: 80, useNativeDriver: true }),
-      Animated.timing(shake, { toValue: -10, duration: 80, useNativeDriver: true }),
+      Animated.timing(shake, { toValue: 8, duration: 80, useNativeDriver: true }),
+      Animated.timing(shake, { toValue: -8, duration: 80, useNativeDriver: true }),
       Animated.timing(shake, { toValue: 0, duration: 60, useNativeDriver: true }),
     ]).start();
   };
 
   const handleVerify = () => {
-    if (otp.join('').length < 6) {
+    const code = otp.join('');
+    if (code.length !== 6) {
       shakeAnimation();
       return;
     }
-    navigation.replace('TermsConditions');
+
+
+    navigation.replace('Terms');
+  };
+
+  const handleResend = () => {
+    setOtp(['', '', '', '', '', '']);
+    setTimer(30);
+    setResendDisabled(true);
+    inputs.current[0]?.focus();
+    // TODO: call resend OTP API
   };
 
   return (
@@ -87,37 +105,25 @@ const OtpScreen = ({ navigation, route }: any) => {
       keyboardVerticalOffset={Platform.OS === 'android' ? 40 : 0}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scroll}
-        >
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
           <Animated.View style={[styles.container, { opacity: fade }]}>
 
             <View style={styles.spacer} />
 
-            {/* CONTENT */}
             <Text style={styles.heading}>
-              {t('verifyOtp')} 🔐
+              {t('VerifyOtp')} 🔐
             </Text>
 
-            <Text style={styles.text}>
-              {t('enterOtpSent')}
-            </Text>
+            <Text style={styles.text}>{t('enterOtpSent')}</Text>
 
-            <Text style={styles.phone}>
-              +91 {phone}
-            </Text>
+            <Text style={styles.phone}>+91 {phone}</Text>
 
             {/* OTP INPUTS */}
-            <Animated.View
-              style={[styles.row, { transform: [{ translateX: shake }] }]}
-            >
+            <Animated.View style={[styles.row, { transform: [{ translateX: shake }] }]}>
               {otp.map((digit, index) => (
                 <TextInput
                   key={index}
-                  ref={(ref) => {
-                    inputs.current[index] = ref;
-                  }}
+                  ref={(ref) => (inputs.current[index] = ref)}
                   value={digit}
                   onChangeText={(t) => handleChange(t, index)}
                   keyboardType="number-pad"
@@ -129,23 +135,27 @@ const OtpScreen = ({ navigation, route }: any) => {
 
             {/* VERIFY */}
             <View style={{ marginTop: 24 }}>
-              <Button
-                title={`${t('verify')} →`}
-                onPress={handleVerify}
-              />
+              <Button title={`${t('Verifyotp')} →`} onPress={handleVerify} />
             </View>
 
             {/* RESEND */}
-            <TouchableOpacity
-              style={{ marginTop: 18 }}
-              disabled={resendDisabled}
-            >
-              <Text style={{ color: colors.primary }}>
-                {resendDisabled
-                  ? `${t('resendAvailableIn')} ${timer}s`
-                  : t('resendOtp')}
-              </Text>
-            </TouchableOpacity>
+           <TouchableOpacity
+  style={styles.resendContainer}
+  onPress={handleResend}
+  disabled={resendDisabled}
+>
+  <Text
+    style={[
+      styles.resendText,
+      resendDisabled && styles.resendDisabledText,
+    ]}
+  >
+    {resendDisabled
+      ? `${t('resendAvailableIn')} ${timer}s`
+      : t('Resendotp')}
+  </Text>
+</TouchableOpacity>
+
 
             <View style={styles.spacer} />
 
@@ -157,43 +167,74 @@ const OtpScreen = ({ navigation, route }: any) => {
 };
 
 export default OtpScreen;
-
 const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
   },
+
   container: {
     flex: 1,
     paddingHorizontal: 20,
     backgroundColor: colors.white,
   },
+
   spacer: {
     flex: 1,
   },
+
   heading: {
     fontSize: 22,
     fontWeight: '700',
     color: colors.primary,
     marginBottom: 6,
+    textAlign: 'center',
   },
+
   text: {
     color: '#777',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 6,
   },
+
   phone: {
     fontWeight: '700',
+    fontSize: 16,
     marginBottom: 22,
+    textAlign: 'center',
+    color: '#222',
   },
+
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginHorizontal: 10,
   },
+
   box: {
     width: 46,
-    height: 50,
-    borderWidth: 1.3,
+    height: 52,
+    borderWidth: 1.5,
     borderColor: '#CFCFCF',
     borderRadius: 10,
     textAlign: 'center',
     fontSize: 18,
+    color: '#222',
+    backgroundColor: '#FFF',
   },
+  resendContainer: {
+  marginTop: 18,
+  alignItems: 'center',
+},
+
+resendText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: colors.primary,
+},
+
+resendDisabledText: {
+  color: '#999',
+},
+
 });

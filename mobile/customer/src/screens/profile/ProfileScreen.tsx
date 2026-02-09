@@ -5,311 +5,355 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   StatusBar,
   Platform,
   Alert,
 } from 'react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import colors from '../../theme/colors';
-import styles from '../../theme/styles';
+import globalStyles from '../../theme/styles';
 import AppIcon from '../../components/AppIcon';
 import { AuthContext } from '../../navigation/AuthContext';
 
-const ProfileScreen = () => {
+/* ✅ ALL SUPPORTED LANGUAGES */
+const AVAILABLE_LANGUAGES = [
+  { code: 'en', labelKey: 'english' },
+  { code: 'ta', labelKey: 'tamil' },
+  { code: 'te', labelKey: 'telugu' },
+  { code: 'kn', labelKey: 'kannada' },
+  { code: 'ml', labelKey: 'malayalam' },
+  { code: 'hi', labelKey: 'hindi' },
+];
+
+const ProfileScreen = ({ navigation }: any) => {
   const { t, i18n } = useTranslation();
   const { logout } = useContext(AuthContext);
 
   const [currentLang, setCurrentLang] = useState(i18n.language);
 
-  /* 🔁 Sync language */
   useEffect(() => {
-    setCurrentLang(i18n.language);
-  }, [i18n.language]);
+  setCurrentLang(i18n.language);
+}, [i18n.language]);
 
-  /* 🌐 CHANGE LANGUAGE */
-  const changeLanguage = async (lang: string) => {
-    if (lang === currentLang) return;
-    await AsyncStorage.setItem('APP_LANG', lang);
-    await i18n.changeLanguage(lang);
-    setCurrentLang(lang);
-  };
+const changeLanguage = async (lang: string) => {
+  if (lang === i18n.language) return;
 
-  /* 🚪 LOGOUT */
+  await AsyncStorage.setItem('APP_LANG', lang);
+  await i18n.changeLanguage(lang);
+};
+
+
   const handleLogout = () => {
     Alert.alert(
       t('logout'),
-      t('logoutConfirm'),
+      t('confirmLogout'),
       [
         { text: t('cancel'), style: 'cancel' },
         {
           text: t('logout'),
           style: 'destructive',
-          onPress: logout, // ✅ ONLY CONTEXT CONTROLS NAVIGATION
+          onPress: async () => {
+            await AsyncStorage.multiRemove([
+              'LOGGED_IN',
+              'USER_DATA',
+              'TOKEN',
+            ]);
+            logout();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
+          },
         },
-      ],
+      ]
     );
-  };
-
-  /* 🧪 DEV RESET APP */
-  const resetApp = async () => {
-    await AsyncStorage.multiRemove([
-      'FIRST_LAUNCH',
-      'APP_LANG',
-      'LOGGED_IN',
-      'TERMS_ACCEPTED',
-    ]);
-    logout();
   };
 
   return (
     <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: colors.white,
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-      }}
+      style={[
+        styles.safe,
+        { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
+      ]}
     >
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={styles.container}>
 
-          {/* PROFILE HEADER */}
-          <View style={[styles.card, local.profileCard]}>
-            <View style={local.avatar}>
-              <AppIcon
-                type="ion"
-                name="person-outline"
-                size={36}
-                color={colors.primary}
-              />
-            </View>
-
-            <Text style={local.name}>Praveen Kumar</Text>
-            <Text style={local.phone}>+91 70929 35675</Text>
-
-            <TouchableOpacity style={local.editBtn}>
-              <Text style={local.editText}>{t('editProfile')}</Text>
-            </TouchableOpacity>
+        {/* PROFILE HEADER */}
+        <View style={[globalStyles.card, styles.profileCard]}>
+          <View style={styles.avatar}>
+            <AppIcon type="ion" name="person-outline" size={38} color={colors.primary} />
           </View>
 
-          {/* SETTINGS */}
-          <Text style={local.sectionTitle}>{t('settings')}</Text>
+          <Text style={styles.name}>Praveen Kumar</Text>
+          <Text style={styles.phone}>+91 70929 35675</Text>
 
-          <View style={styles.card}>
-            <ProfileItem icon="person-outline" label={t('accountDetails')} />
-            <Divider />
-
-            <ProfileItem icon="location-outline" label={t('savedAddresses')} />
-            <Divider />
-
-            {/* 🌐 LANGUAGE */}
-            <View style={{ paddingVertical: 14 }}>
-              <View style={local.itemLeft}>
-                <AppIcon type="ion" name="language-outline" size={22} />
-                <Text style={local.itemText}>{t('language')}</Text>
-              </View>
-
-              <View style={local.langRow}>
-                <TouchableOpacity
-                  style={[
-                    local.langBtn,
-                    currentLang === 'en' && local.langActive,
-                  ]}
-                  onPress={() => changeLanguage('en')}
-                >
-                  <Text style={local.langText}>{t('english')}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    local.langBtn,
-                    currentLang === 'ta' && local.langActive,
-                  ]}
-                  onPress={() => changeLanguage('ta')}
-                >
-                  <Text style={local.langText}>{t('tamil')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <Divider />
-
-            <ProfileItem icon="help-circle-outline" label={t('helpSupport')} />
-            <Divider />
-
-            <ProfileItem icon="information-circle-outline" label={t('about')} />
-          </View>
-
-          {/* LOGOUT */}
           <TouchableOpacity
-            style={[styles.card, local.logoutCard]}
-            onPress={handleLogout}
+            style={styles.editBtn}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('EditprofileScreen')}
           >
-            <View style={local.logoutRow}>
-              <AppIcon
-                type="ion"
-                name="log-out-outline"
-                color={colors.danger}
-              />
-              <Text style={local.logoutText}>{t('logout')}</Text>
-            </View>
+            <Text style={styles.editText}>{t('editProfile')}</Text>
           </TouchableOpacity>
+        </View>
 
-          {/* DEV RESET (ONLY IN DEV MODE) */}
-          {__DEV__ && (
-            <TouchableOpacity
-              style={[styles.card, local.devResetCard]}
-              onPress={resetApp}
-            >
-              <View style={local.logoutRow}>
-                <AppIcon
-                  type="ion"
-                  name="refresh-outline"
-                  color="#FF9800"
-                />
-                <Text style={local.devResetText}>
-                  Reset App (DEV)
-                </Text>
+        {/* SETTINGS */}
+        <Text style={styles.sectionTitle}>{t('settings')}</Text>
+
+        <View style={globalStyles.card}>
+          <ProfileItem
+            icon="person-outline"
+            label={t('accountDetails')}
+            onPress={() => navigation.navigate('AccountDetailsScreen')}
+          />
+
+          <Divider />
+
+          <ProfileItem icon="location-outline" label={t('savedAddresses')}
+          onPress={() => navigation.navigate('ViewAddressScreen')}
+          />
+
+          <Divider />
+
+          {/* 🌐 LANGUAGE SECTION */}
+          <View style={styles.langSection}>
+            <View style={styles.itemLeft}>
+              <View style={styles.iconCircle}>
+                <AppIcon type="ion" name="language-outline" size={20} />
               </View>
-            </TouchableOpacity>
-          )}
+              <Text style={styles.itemText}>{t('language')}</Text>
+            </View>
 
-        </ScrollView>
-      </View>
+            <View style={styles.langRow}>
+              {AVAILABLE_LANGUAGES.map(lang => (
+                <LangButton
+                  key={lang.code}
+                  label={t(lang.labelKey)}
+                  active={currentLang === lang.code}
+                  onPress={() => changeLanguage(lang.code)}
+                />
+              ))}
+            </View>
+          </View>
+
+          <Divider />
+
+          <ProfileItem
+            icon="help-circle-outline"
+            label={t('helpSupport')}
+            onPress={() => navigation.navigate('HelpSupport')}
+          />
+
+          <Divider />
+
+          <ProfileItem
+            icon="information-circle-outline"
+            label={t('about')}
+            onPress={() => navigation.navigate('Aboutus')}
+          />
+        </View>
+
+        {/* LOGOUT */}
+        <TouchableOpacity
+          style={[globalStyles.card, styles.logoutCard]}
+          onPress={handleLogout}
+          activeOpacity={0.85}
+        >
+          <View style={styles.logoutRow}>
+            <View style={styles.logoutIcon}>
+              <AppIcon type="ion" name="log-out-outline" color="#FFF" size={18} />
+            </View>
+            <Text style={styles.logoutText}>{t('logout')}</Text>
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 export default ProfileScreen;
 
-/* ---------- SMALL COMPONENTS ---------- */
+/* ---------- COMPONENTS ---------- */
 
-const ProfileItem = ({ icon, label }: any) => (
-  <TouchableOpacity style={local.itemRow}>
-    <View style={local.itemLeft}>
-      <AppIcon type="ion" name={icon} size={22} />
-      <Text style={local.itemText}>{label}</Text>
+const ProfileItem = ({ icon, label, onPress }: any) => (
+  <TouchableOpacity style={styles.itemRow} onPress={onPress} activeOpacity={0.7}>
+    <View style={styles.itemLeft}>
+      <View style={styles.iconCircle}>
+        <AppIcon type="ion" name={icon} size={20} />
+      </View>
+      <Text style={styles.itemText}>{label}</Text>
     </View>
-    <AppIcon type="ion" name="chevron-forward" color="#999" />
+    <AppIcon type="ion" name="chevron-forward" size={18} color="#AAA" />
   </TouchableOpacity>
 );
 
-const Divider = () => <View style={local.divider} />;
+const LangButton = ({ label, active, onPress }: any) => (
+  <TouchableOpacity
+    style={[styles.langBtn, active && styles.langActive]}
+    onPress={onPress}
+    activeOpacity={0.8}
+  >
+    <Text style={[styles.langText, active && { color: colors.primary }]}>
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
+
+const Divider = () => <View style={styles.divider} />;
 
 /* ---------- STYLES ---------- */
 
-const local = StyleSheet.create({
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: '#F7F9FB',
+  },
+
+  container: {
+    padding: 16,
+  },
+
   profileCard: {
     alignItems: 'center',
-    marginBottom: 24,
+    paddingVertical: 24,
+    borderRadius: 16,
+    marginBottom: 28,
   },
+
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#F1F5F4',
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    backgroundColor: '#ECFDF3',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
+
   name: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '700',
-    color: '#333',
+    color: '#222',
   },
+
   phone: {
     fontSize: 13,
     color: '#777',
-    marginTop: 2,
+    marginTop: 4,
   },
+
   editBtn: {
-    marginTop: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.primary,
+    marginTop: 14,
+    paddingHorizontal: 26,
+    paddingVertical: 10,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
   },
+
   editText: {
-    color: colors.primary,
-    fontWeight: '600',
+    color: '#FFF',
+    fontWeight: '700',
     fontSize: 13,
   },
+
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    marginBottom: 10,
-    color: '#3A2C1D',
+    color: '#444',
+    marginBottom: 12,
   },
+
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 14,
   },
+
   itemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
+
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   itemText: {
     fontSize: 14,
+    fontWeight: '500',
     color: '#333',
   },
+
   divider: {
     height: 1,
     backgroundColor: '#EEE',
   },
 
-  /* 🌐 LANGUAGE */
+  langSection: {
+    paddingVertical: 14,
+  },
+
   langRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap', // ✅ REQUIRED
     gap: 12,
     marginTop: 10,
   },
+
   langBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: '#DDD',
-  },
-  langActive: {
-    borderColor: colors.primary,
-    backgroundColor: '#F0FFF6',
-  },
-  langText: {
-    fontSize: 13,
-    fontWeight: '600',
+    backgroundColor: '#FFF',
   },
 
-  /* 🚪 LOGOUT */
-  logoutCard: {
-    marginTop: 20,
+  langActive: {
+    borderColor: colors.primary,
+    backgroundColor: '#ECFDF3',
   },
+
+  langText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#555',
+  },
+
+  logoutCard: {
+    marginTop: 24,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 16,
+  },
+
   logoutRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
+
+  logoutIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   logoutText: {
     fontSize: 15,
     fontWeight: '700',
     color: colors.danger,
-  },
-
-  /* 🧪 DEV RESET */
-  devResetCard: {
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#FFD699',
-    backgroundColor: '#FFF7E6',
-  },
-  devResetText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FF9800',
   },
 });

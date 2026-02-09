@@ -1,6 +1,6 @@
 {
     "welcomeBack": "Welcome Back 👋",
-  "signInToContinue": "Sign in to continue booking your services",
+  "signInToContinue": "Sign In to continue booking your services",
   "enterPhoneNumber": "Enter your phone number",
   "invalidNumber": "Invalid number",
   "enterValidPhone": "Please enter a valid phone number",
@@ -96,11 +96,30 @@
   "savedAddresses": "Saved Addresses",
   "english": "English",
   "tamil": "Tamil",
+  "telugu":"Telugu",
+  "kannada":"Kannada",
+  "Malayalam":"Malayalam",
+  "Hindi":"Hindi",
   "helpSupport": "Help & Support",
   "about": "About DrainGo",
   "logout": "Logout",
   "logoutConfirm": "Are you sure you want to logout?",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+ "dontHaveAccount": "Don’t have an account?",
+  "createAccount": "Create account",
+  "enterOtpSent":"Enter Otp",
+  "Verifyotp":"Verify Otp",
+  "Resendotp":"Resend Otp",
+  "jobDetails":"Job Details",
+  "jobId":"Job Id",
+  "vehicle":"Vehicle",
+  "timeTracking":"Time Tracking",
+  "startedAt":"Started At",
+  "finishedAt":"Finished At",
+  "duration":"Duration",
+  "startCleaning":"Start Cleaning",
+  "finishCleaning":"Finish Cleaning",
+  "payToDriver":"Pay the amount to Driver"
 
 }
 
