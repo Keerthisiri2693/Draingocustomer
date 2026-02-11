@@ -1,53 +1,61 @@
-import { useEffect, useRef } from 'react';
-import Geolocation from 'react-native-geolocation-service';
-import { PermissionsAndroid, Platform } from 'react-native';
+import { useEffect, useRef } from "react";
+import * as Location from "expo-location";
 
 export const useDriverLocation = (
-  onLocationUpdate: (lat: number, lng: number) => void,
+  onLocationUpdate: (lat: number, lng: number) => void
 ) => {
-  const watchId = useRef<number | null>(null);
+  const subscription = useRef<Location.LocationSubscription | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     startTracking();
 
-    return () => stopTracking();
+    return () => {
+      mountedRef.current = false;
+      stopTracking();
+    };
   }, []);
 
+  // =========================
+  // ▶️ START TRACKING
+  // =========================
   const startTracking = async () => {
-    const hasPermission = await requestPermission();
-    if (!hasPermission) return;
+    try {
+      const { status } =
+        await Location.requestForegroundPermissionsAsync();
 
-    watchId.current = Geolocation.watchPosition(
-      position => {
-        const { latitude, longitude } = position.coords;
-        onLocationUpdate(latitude, longitude);
-      },
-      error => {
-        console.log('GPS Error:', error);
-      },
-      {
-        enableHighAccuracy: true,
-        distanceFilter: 10, // meters
-        interval: 5000,     // Android
-        fastestInterval: 3000,
-      },
-    );
-  };
+      if (status !== "granted") {
+        console.warn("Location permission denied");
+        return;
+      }
 
-  const stopTracking = () => {
-    if (watchId.current !== null) {
-      Geolocation.clearWatch(watchId.current);
-      watchId.current = null;
+      subscription.current =
+        await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            distanceInterval: 10, // meters
+            timeInterval: 5000,   // ms
+          },
+          (position) => {
+            if (!mountedRef.current) return;
+
+            const { latitude, longitude } = position.coords;
+            onLocationUpdate(latitude, longitude);
+          }
+        );
+    } catch (error) {
+      console.error("Location tracking error:", error);
     }
   };
 
-  const requestPermission = async () => {
-    if (Platform.OS !== 'android') return true;
-
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-    );
-
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  // =========================
+  // ⏹ STOP TRACKING
+  // =========================
+  const stopTracking = () => {
+    if (subscription.current) {
+      subscription.current.remove();
+      subscription.current = null;
+    }
   };
 };

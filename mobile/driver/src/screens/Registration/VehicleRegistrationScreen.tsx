@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,8 +8,11 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/AppNavigator";
 
@@ -18,9 +21,22 @@ type Props = NativeStackScreenProps<
   "VehicleRegistration"
 >;
 
-const VEHICLE_TYPES = ["Lorry", "Tractor",];
+const VEHICLE_TYPES = ["Lorry", "Tractor"];
 
-export default function VehicleRegistrationScreen({ navigation }: Props) {
+const TOOLBAR_HEIGHT =
+  Platform.OS === "android"
+    ? 56 + (StatusBar.currentHeight ?? 0)
+    : 56;
+
+export default function VehicleRegistrationScreen({
+  navigation,
+  route,
+}: Props) {
+  const { vehicle, isEdit } = route.params || {};
+
+  const [vehicleCount, setVehicleCount] = useState(0);
+  const [role, setRole] = useState<"DRIVER" | "OWNER">("DRIVER");
+
   const [form, setForm] = useState({
     type: "",
     model: "",
@@ -32,6 +48,36 @@ export default function VehicleRegistrationScreen({ navigation }: Props) {
     photosUploaded: false,
     accepted: false,
   });
+
+  /* ===== LOAD VEHICLE COUNT & ROLE ===== */
+  useEffect(() => {
+    const loadRole = async () => {
+      const countStr = await AsyncStorage.getItem("VEHICLE_COUNT");
+      const count = countStr ? Number(countStr) : 0;
+
+      setVehicleCount(count);
+      setRole(count === 0 ? "DRIVER" : "OWNER");
+    };
+
+    loadRole();
+  }, []);
+
+  /* ===== PREFILL FORM (EDIT MODE) ===== */
+  useEffect(() => {
+    if (isEdit && vehicle) {
+      setForm({
+        type: vehicle.type || "",
+        model: vehicle.model || "",
+        tank: vehicle.tank || "",
+        number: vehicle.number || "",
+        basePrice: vehicle.basePrice || "",
+        pricePer1000: vehicle.pricePer1000 || "",
+        docsUploaded: true,
+        photosUploaded: true,
+        accepted: true,
+      });
+    }
+  }, [isEdit, vehicle]);
 
   const update = (k: keyof typeof form, v: any) =>
     setForm({ ...form, [k]: v });
@@ -47,19 +93,79 @@ export default function VehicleRegistrationScreen({ navigation }: Props) {
     form.photosUploaded &&
     form.accepted;
 
+  /* ===== SUBMIT VEHICLE ===== */
+  const submitVehicle = async () => {
+    if (isEdit) {
+      alert("Vehicle updated successfully 🚛");
+      navigation.goBack();
+      return;
+    }
+
+    const newCount = vehicleCount + 1;
+    const newRole = newCount > 1 ? "OWNER" : "DRIVER";
+
+    await AsyncStorage.setItem("VEHICLE_COUNT", String(newCount));
+    await AsyncStorage.setItem("USER_ROLE", newRole);
+    await AsyncStorage.setItem("VEHICLE_REGISTERED", "true");
+
+    navigation.navigate("VerificationPending");
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        {/* ===== TOOLBAR ===== */}
+        <View style={styles.toolbar}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={22} color="#fff" />
+          </TouchableOpacity>
+
+          <Text style={styles.toolbarTitle}>
+            {isEdit ? "Edit Vehicle" : "Vehicle Registration"}
+          </Text>
+
+          {vehicleCount > 0 && !isEdit ? (
+            <TouchableOpacity
+              onPress={() => navigation.navigate("VehicleListScreen")}
+              style={styles.viewBtn}
+            >
+              <Ionicons name="car-outline" size={20} color="#fff" />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 22 }} />
+          )}
+        </View>
+
+        {/* ===== ROLE BADGE ===== */}
+        {!isEdit && (
+          <View style={styles.roleWrapper}>
+            <View
+              style={[
+                styles.roleBadge,
+                role === "OWNER" && styles.ownerBadge,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.roleText,
+                  role === "OWNER" && styles.ownerText,
+                ]}
+              >
+                {role === "OWNER" ? "Vehicle Owner" : "Driver"}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* ===== FORM ===== */}
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: 40 }}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Text style={styles.header}>Vehicle Registration</Text>
-
           <View style={styles.card}>
             {/* VEHICLE TYPE */}
             <Text style={styles.label}>Vehicle Type *</Text>
@@ -85,78 +191,83 @@ export default function VehicleRegistrationScreen({ navigation }: Props) {
               ))}
             </View>
 
-            {/* MODEL */}
             <Text style={styles.label}>Vehicle Model *</Text>
             <TextInput
-              placeholder="Example: Tata 1613"
               style={styles.input}
               value={form.model}
               onChangeText={(t) => update("model", t)}
             />
 
-            {/* TANK */}
             <Text style={styles.label}>Tank Capacity (Litres) *</Text>
             <TextInput
-              placeholder="Example: 5000"
-              keyboardType="numeric"
               style={styles.input}
+              keyboardType="numeric"
               value={form.tank}
               onChangeText={(t) => update("tank", t)}
             />
 
-            {/* VEHICLE NUMBER */}
             <Text style={styles.label}>Vehicle Number *</Text>
             <TextInput
-              placeholder="TN XX AB XXXX"
               style={styles.input}
+              editable={!isEdit}
               value={form.number}
               onChangeText={(t) => update("number", t)}
             />
 
-            {/* PRICE DETAILS */}
+            {/* PRICE */}
             <Text style={styles.section}>Price Details</Text>
 
             <Text style={styles.label}>Base Price (₹) *</Text>
             <TextInput
-              placeholder="Example: 500"
-              keyboardType="numeric"
               style={styles.input}
+              keyboardType="numeric"
               value={form.basePrice}
               onChangeText={(t) => update("basePrice", t)}
             />
 
-            <Text style={styles.label}>Price per 1000 Litres (₹) *</Text>
+            <Text style={styles.label}>
+              Price per 1000 Litres (₹) *
+            </Text>
             <TextInput
-              placeholder="Example: 700"
-              keyboardType="numeric"
               style={styles.input}
+              keyboardType="numeric"
               value={form.pricePer1000}
               onChangeText={(t) => update("pricePer1000", t)}
             />
 
-            {/* DOCUMENTS */}
-            <Text style={styles.section}>
-              Vehicle Documents (RC, Insurance, Number Plate)
-            </Text>
-
+            {/* 📄 VEHICLE DOCUMENTS */}
+            <Text style={styles.section}>Vehicle Documents</Text>
             <TouchableOpacity
               style={styles.uploadBtn}
               onPress={() => update("docsUploaded", true)}
             >
-              <Text style={{ fontWeight: "600" }}>
-                {form.docsUploaded ? "Uploaded ✓" : "Upload documents"}
+              <Ionicons
+                name="document-text-outline"
+                size={18}
+                color="#1DBF73"
+              />
+              <Text style={styles.uploadText}>
+                {form.docsUploaded
+                  ? "Documents uploaded ✓"
+                  : "Upload documents"}
               </Text>
             </TouchableOpacity>
 
-            {/* PHOTOS */}
-            <Text style={styles.section}>Vehicle Photos (4 sides)</Text>
-
+            {/* 🖼 VEHICLE PHOTOS */}
+            <Text style={styles.section}>Vehicle Photos</Text>
             <TouchableOpacity
               style={styles.uploadBtn}
               onPress={() => update("photosUploaded", true)}
             >
-              <Text style={{ fontWeight: "600" }}>
-                {form.photosUploaded ? "Uploaded ✓" : "Upload photos"}
+              <Ionicons
+                name="image-outline"
+                size={18}
+                color="#1DBF73"
+              />
+              <Text style={styles.uploadText}>
+                {form.photosUploaded
+                  ? "Photos uploaded ✓"
+                  : "Upload photos"}
               </Text>
             </TouchableOpacity>
 
@@ -166,117 +277,123 @@ export default function VehicleRegistrationScreen({ navigation }: Props) {
               onPress={() => update("accepted", !form.accepted)}
             >
               <View
-                style={[styles.checkbox, form.accepted && styles.checked]}
+                style={[
+                  styles.checkbox,
+                  form.accepted && styles.checked,
+                ]}
               />
               <Text style={styles.checkboxText}>
                 I accept the Terms & Conditions
               </Text>
             </TouchableOpacity>
           </View>
+        </ScrollView>
 
+        {/* ===== FOOTER ===== */}
+        <View style={styles.footer}>
           <TouchableOpacity
             style={[styles.button, !isValid && { opacity: 0.4 }]}
             disabled={!isValid}
-            onPress={() => navigation.navigate("VerificationPending")}
+            onPress={submitVehicle}
           >
-            <Text style={styles.buttonText}>Verify</Text>
+            <Text style={styles.buttonText}>
+              {isEdit ? "Update Vehicle" : "Verify"}
+            </Text>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }
 
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f3f7f6",
+  container: { flex: 1, backgroundColor: "#fff" },
+
+  toolbar: {
+    height: TOOLBAR_HEIGHT,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    backgroundColor: "#1DBF73",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
   },
 
-  header: {
-    fontSize: 22,
-    fontWeight: "800",
-    marginTop: 10,
-    marginBottom: 12,
+  toolbarTitle: { color: "#fff", fontSize: 16, fontWeight: "800" },
+
+  viewBtn: { padding: 6 },
+
+  roleWrapper: { paddingHorizontal: 16, paddingTop: 12 },
+
+  roleBadge: {
+    backgroundColor: "#E7F9EF",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
+
+  ownerBadge: { backgroundColor: "#FFF3CD" },
+
+  roleText: { fontSize: 12, fontWeight: "700", color: "#1DBF73" },
+  ownerText: { color: "#856404" },
+
+  scrollContent: { paddingVertical: 16 },
 
   card: {
     backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
+    marginHorizontal: 16,
     elevation: 2,
   },
 
-  label: {
-    marginTop: 10,
-    marginBottom: 6,
-    fontWeight: "600",
-    color: "#333",
-  },
+  label: { marginTop: 10, marginBottom: 6, fontWeight: "600" },
 
   input: {
     borderWidth: 1,
     borderColor: "#d1d5db",
     borderRadius: 10,
     paddingHorizontal: 12,
-    backgroundColor: "#fff",
     height: 48,
   },
 
-  section: {
-    marginTop: 14,
-    marginBottom: 6,
-    fontWeight: "800",
-  },
+  section: { marginTop: 16, marginBottom: 8, fontWeight: "800" },
 
-  typeRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
+  typeRow: { flexDirection: "row", marginBottom: 10 },
 
   typeBtn: {
     flex: 1,
     borderWidth: 1,
     borderColor: "#d1d5db",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingVertical: 10,
     alignItems: "center",
     marginRight: 8,
     backgroundColor: "#f9fafb",
   },
 
-  typeBtnActive: {
-    backgroundColor: "#1DBF73",
-    borderColor: "#1DBF73",
-  },
-
-  typeText: {
-    fontWeight: "600",
-    color: "#333",
-  },
-
-  typeTextActive: {
-    color: "#fff",
-  },
+  typeBtnActive: { backgroundColor: "#1DBF73", borderColor: "#1DBF73" },
+  typeText: { fontWeight: "700", color: "#333" },
+  typeTextActive: { color: "#fff" },
 
   uploadBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     borderWidth: 1,
     borderColor: "#bfc5d2",
-    borderRadius: 10,
+    borderRadius: 12,
     height: 46,
-    alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
     backgroundColor: "#f8f9fb",
   },
 
-  checkboxRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 6,
-  },
+  uploadText: { fontWeight: "600", color: "#333" },
+
+  checkboxRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
 
   checkbox: {
     width: 20,
@@ -287,23 +404,17 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 
-  checked: { backgroundColor: "#1DBF73" },
+  checked: { backgroundColor: "#1DBF73", borderColor: "#1DBF73" },
 
-  checkboxText: { color: "#333" },
+  footer: { padding: 16, backgroundColor: "#fff" },
 
   button: {
     backgroundColor: "#1DBF73",
-    height: 48,
-    borderRadius: 14,
+    height: 52,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 18,
-    marginBottom: 30,
   },
 
-  buttonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-  },
+  buttonText: { color: "#fff", fontWeight: "800", fontSize: 16 },
 });

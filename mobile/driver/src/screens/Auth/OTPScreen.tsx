@@ -9,8 +9,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/AppNavigator";
 
@@ -22,17 +24,62 @@ export default function OTPScreen({ navigation, route }: Props) {
   const inputs = useRef<TextInput[]>([]);
 
   const handleChange = (text: string, index: number) => {
-    const formatted = text.replace(/[^0-9]/g, "");
+    const digit = text.replace(/[^0-9]/g, "");
     const updated = [...otp];
-    updated[index] = formatted;
+    updated[index] = digit;
     setOtp(updated);
 
-    if (formatted && index < 5) inputs.current[index + 1]?.focus();
-    if (!formatted && index > 0) inputs.current[index - 1]?.focus();
+    if (digit && index < 5) inputs.current[index + 1]?.focus();
+    if (!digit && index > 0) inputs.current[index - 1]?.focus();
   };
 
   const code = otp.join("");
   const isComplete = code.length === 6;
+
+  /* ================= VERIFY OTP ================= */
+ const handleVerifyOtp = async () => {
+  try {
+    if (!isComplete) return;
+
+    await AsyncStorage.setItem("LOGGED_IN", "true");
+
+    const termsAccepted = await AsyncStorage.getItem("TERMS_ACCEPTED");
+    const driverRegistered = await AsyncStorage.getItem("DRIVER_REGISTERED");
+    const vehicleRegistered = await AsyncStorage.getItem("VEHICLE_REGISTERED");
+    const membershipDone = await AsyncStorage.getItem("MEMBERSHIP_DONE");
+
+    // 🔹 STEP 1: Terms
+    if (termsAccepted !== "true") {
+      navigation.replace("TermsConditionScreen");
+      return;
+    }
+
+    // 🔹 STEP 2: Driver Registration
+    if (driverRegistered !== "true") {
+      navigation.replace("DriverRegistrationScreen");
+      return;
+    }
+
+    // 🔹 STEP 3: Vehicle Registration
+    if (vehicleRegistered !== "true") {
+      navigation.replace("VehicleRegistrationScreen");
+      return;
+    }
+
+    // 🔹 STEP 4: Membership
+    if (membershipDone !== "true") {
+      navigation.replace("MembershipScreen");
+      return;
+    }
+
+    // ✅ ALL COMPLETED → GO TO LOCATION
+    navigation.replace("LocationScreen");
+
+  } catch (e) {
+    Alert.alert("Error", "OTP verification failed");
+  }
+};
+
 
   return (
     <KeyboardAvoidingView
@@ -44,7 +91,7 @@ export default function OTPScreen({ navigation, route }: Props) {
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
         >
-          {/* BIGGER IMAGE */}
+          {/* IMAGE */}
           <Image
             source={require("../../assets/illustrations/otp.png")}
             style={styles.image}
@@ -57,14 +104,12 @@ export default function OTPScreen({ navigation, route }: Props) {
             <Text style={styles.phone}>{phone}</Text>
           </Text>
 
-          {/* OTP Inputs */}
+          {/* OTP INPUTS */}
           <View style={styles.boxRow}>
             {otp.map((value, index) => (
               <TextInput
                 key={index}
-                ref={(el) => {
-                  if (el) inputs.current[index] = el;
-                }}
+                ref={(el) => el && (inputs.current[index] = el)}
                 style={styles.box}
                 keyboardType="number-pad"
                 maxLength={1}
@@ -74,10 +119,11 @@ export default function OTPScreen({ navigation, route }: Props) {
             ))}
           </View>
 
+          {/* VERIFY BUTTON */}
           <TouchableOpacity
             style={[styles.button, !isComplete && { opacity: 0.4 }]}
             disabled={!isComplete}
-            onPress={() => navigation.replace("DriverRegistration")}
+            onPress={handleVerifyOtp}
           >
             <Text style={styles.buttonText}>Verify</Text>
           </TouchableOpacity>
@@ -92,6 +138,8 @@ export default function OTPScreen({ navigation, route }: Props) {
   );
 }
 
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
@@ -102,7 +150,7 @@ const styles = StyleSheet.create({
   image: {
     width: "90%",
     alignSelf: "center",
-    height: 250,          // 👈 bigger image
+    height: 250,
     resizeMode: "contain",
     marginTop: 10,
     marginBottom: 10,
@@ -122,7 +170,10 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
 
-  phone: { color: "#1DBF73", fontWeight: "700" },
+  phone: {
+    color: "#1DBF73",
+    fontWeight: "700",
+  },
 
   boxRow: {
     flexDirection: "row",
@@ -149,7 +200,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+  },
 
   resend: {
     textAlign: "center",

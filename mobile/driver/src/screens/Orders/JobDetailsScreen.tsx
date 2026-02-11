@@ -4,86 +4,146 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons as Icon } from "@expo/vector-icons";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../navigation/AppNavigator";
 
-export default function JobDetailsScreen({ navigation }: any) {
+type Props = NativeStackScreenProps<
+  RootStackParamList,
+  "JobDetails"
+>;
+
+const TOOLBAR_HEIGHT =
+  Platform.OS === "android"
+    ? 56 + (StatusBar.currentHeight ?? 0)
+    : 56;
+
+export default function JobDetailsScreen({ navigation }: Props) {
   return (
-    <SafeAreaView style={styles.container}>
-      {/* HEADER */}
-      <Text style={styles.title}>Job Details</Text>
+    <SafeAreaView style={styles.safe} edges={["bottom"]}>
+      {/* ===== TOOLBAR ===== */}
+      <View style={styles.toolbar}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Icon name="arrow-back" size={22} color="#fff" />
+        </TouchableOpacity>
 
-      {/* CUSTOMER CARD */}
-      <View style={styles.topCard}>
-        <View style={styles.avatar}>
-          <Icon name="person" size={26} color="#fff" />
+        <Text style={styles.toolbarTitle}>Job Details</Text>
+
+        <View style={{ width: 22 }} />
+      </View>
+
+      {/* ===== CONTENT ===== */}
+      <View style={styles.container}>
+        {/* CUSTOMER CARD */}
+        <View style={styles.topCard}>
+          <View style={styles.avatar}>
+            <Icon name="person" size={26} color="#fff" />
+          </View>
+
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name}>Kumar</Text>
+            <Text style={styles.sub}>1.2 km • 5 mins away</Text>
+          </View>
+
+          <TouchableOpacity style={styles.callBtn}>
+            <Icon name="call" size={18} color="#1DBF73" />
+          </TouchableOpacity>
         </View>
 
-        <View>
-          <Text style={styles.name}>Kumar</Text>
-          <Text style={styles.sub}>1.2 km • 5 mins away</Text>
+        {/* DETAILS CARD */}
+        <View style={styles.card}>
+          {/* LOCATION */}
+          <View style={styles.row}>
+            <Icon name="location-on" size={22} color="#1DBF73" />
+            <View style={styles.textWrap}>
+              <Text style={styles.label}>Service Location</Text>
+              <Text style={styles.value}>
+                Pakkam, Thiruvallur
+              </Text>
+            </View>
+          </View>
+
+          {/* WORK */}
+          <View style={styles.row}>
+            <Icon name="build" size={22} color="#1DBF73" />
+            <View style={styles.textWrap}>
+              <Text style={styles.label}>Work</Text>
+              <Text style={styles.value}>
+                Septic Tank Cleaning
+              </Text>
+            </View>
+          </View>
+
+          {/* TANK */}
+          <View style={styles.row}>
+            <Icon name="water-drop" size={22} color="#1DBF73" />
+            <View style={styles.textWrap}>
+              <Text style={styles.label}>Tank Capacity</Text>
+              <Text style={styles.value}>1000 Litres</Text>
+            </View>
+          </View>
+
+          {/* PAYMENT */}
+          <View style={styles.paymentRow}>
+            <Text style={styles.paymentLabel}>
+              Service Fee
+            </Text>
+            <Text style={styles.paymentValue}>
+              ₹ 700
+            </Text>
+          </View>
         </View>
       </View>
 
-      {/* DETAILS CARD */}
-      <View style={styles.card}>
-        {/* LOCATION */}
-        <View style={styles.row}>
-          <Icon name="location-on" size={22} color="#1DBF73" />
-          <View style={styles.textWrap}>
-            <Text style={styles.label}>Service Location</Text>
-            <Text style={styles.value}>Pakkam, Thiruvallur</Text>
-          </View>
-        </View>
-
-        {/* WORK */}
-        <View style={styles.row}>
-          <Icon name="build" size={22} color="#1DBF73" />
-          <View style={styles.textWrap}>
-            <Text style={styles.label}>Work</Text>
-            <Text style={styles.value}>Septic Tank Cleaning</Text>
-          </View>
-        </View>
-
-        {/* TANK */}
-        <View style={styles.row}>
-          <Icon name="water-drop" size={22} color="#1DBF73" />
-          <View style={styles.textWrap}>
-            <Text style={styles.label}>Tank Capacity</Text>
-            <Text style={styles.value}>1000 Litres</Text>
-          </View>
-        </View>
-
-        {/* PAYMENT */}
-        <View style={styles.paymentRow}>
-          <Text style={styles.paymentLabel}>Service Fee</Text>
-          <Text style={styles.paymentValue}>₹ 700</Text>
-        </View>
+      {/* ===== BOTTOM ACTION ===== */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity
+          style={styles.startBtn}
+          onPress={() => navigation.replace("Tracking")}
+        >
+          <Text style={styles.startText}>
+            Start Service
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      {/* ACTION BUTTON */}
-      <TouchableOpacity
-        style={styles.startBtn}
-        onPress={() => navigation.replace("Tracking")}
-      >
-        <Text style={styles.startText}>Start Service</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
     backgroundColor: "#F6F8FA",
-    padding: 18,
   },
 
-  title: {
-    fontSize: 22,
+  /* ===== TOOLBAR ===== */
+  toolbar: {
+    height: TOOLBAR_HEIGHT,
+    paddingTop:
+      Platform.OS === "android"
+        ? StatusBar.currentHeight
+        : 0,
+    backgroundColor: "#1DBF73",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    justifyContent: "space-between",
+  },
+
+  toolbarTitle: {
+    color: "#fff",
+    fontSize: 17,
     fontWeight: "800",
-    marginBottom: 16,
+  },
+
+  /* ===== CONTENT ===== */
+  container: {
+    flex: 1,
+    padding: 16,
   },
 
   topCard: {
@@ -93,7 +153,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 18,
     marginBottom: 18,
-    gap: 12,
   },
 
   avatar: {
@@ -103,16 +162,26 @@ const styles = StyleSheet.create({
     backgroundColor: "#1DBF73",
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 12,
   },
 
   name: {
     fontSize: 17,
     fontWeight: "800",
+    color: "#222",
   },
 
   sub: {
     color: "#6E7C7C",
     marginTop: 2,
+    fontSize: 13,
+  },
+
+  callBtn: {
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 22,
+    elevation: 3,
   },
 
   card: {
@@ -142,6 +211,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
     marginTop: 2,
+    color: "#222",
   },
 
   paymentRow: {
@@ -160,9 +230,15 @@ const styles = StyleSheet.create({
   },
 
   paymentValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "900",
     color: "#1DBF73",
+  },
+
+  /* ===== BOTTOM BAR ===== */
+  bottomBar: {
+    padding: 16,
+    backgroundColor: "#F6F8FA",
   },
 
   startBtn: {
@@ -170,7 +246,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",
-    marginTop: "auto",
+    elevation: 6,
   },
 
   startText: {

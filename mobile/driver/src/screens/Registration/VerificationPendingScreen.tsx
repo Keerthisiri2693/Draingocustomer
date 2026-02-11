@@ -19,7 +19,7 @@ export default function VerificationPendingScreen({ navigation }: any) {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.replace("Membership")}
+        onPress={() => navigation.replace("MembershipScreen")}
       >
         <Text style={styles.buttonText}>Select Membership</Text>
       </TouchableOpacity>

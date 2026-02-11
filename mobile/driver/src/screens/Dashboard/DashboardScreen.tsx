@@ -1,162 +1,149 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Image,
-  Switch,
   TouchableOpacity,
+  StatusBar,
+  Platform,
+  Switch,
   ScrollView,
-  Modal,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, DrawerActions } from "@react-navigation/native";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
-export default function DashboardScreen() {
-  const navigation: any = useNavigation();
+const TOOLBAR_HEIGHT =
+  Platform.OS === "android"
+    ? 56 + (StatusBar.currentHeight ?? 0)
+    : 56;
 
-  // ✅ Dashboard-only state
-  const [active, setActive] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+const DashboardScreen = () => {
+  const navigation = useNavigation<any>();
+
+  /* ================= STATE ================= */
+  const [isOnline, setIsOnline] = useState(false);
+  const [incomingRide, setIncomingRide] = useState(false);
+
+  const weeklyData = [120, 220, 150, 300, 180, 260, 90];
+
+  /* ================= SIMULATE INCOMING RIDE ================= */
+  useEffect(() => {
+    if (isOnline) {
+      const timer = setTimeout(() => {
+        setIncomingRide(true);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    } else {
+      setIncomingRide(false);
+    }
+  }, [isOnline]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        >
-          <Icon name="menu" size={26} color="#333" />
-        </TouchableOpacity>
+    <View style={styles.container}>
+      {/* ===== TOOLBAR ===== */}
+      <View style={styles.toolbar}>
+        <Text style={styles.toolbarTitle}>Dashboard</Text>
 
-        <View style={styles.headerRight}>
-          <Text style={styles.onlineText}>
-            {active ? "Online" : "Offline"}
+        <View style={styles.toolbarRight}>
+          <Text style={styles.statusText}>
+            {isOnline ? "Online" : "Offline"}
           </Text>
-
           <Switch
-            value={active}
-            onValueChange={setActive}
-            trackColor={{ false: "#ccc", true: "#8ff2a6" }}
-            thumbColor={active ? "#2ecc71" : "#999"}
+            value={isOnline}
+            onValueChange={setIsOnline}
+            trackColor={{ false: "#ccc", true: "#8FF2A6" }}
+            thumbColor={isOnline ? "#2ecc71" : "#999"}
           />
         </View>
       </View>
 
-      {/* OFFLINE BANNER */}
-      {!active && (
-        <View style={styles.offlineBanner}>
-          <Text style={{ color: "#fff" }}>
-            You are offline — turn Online to receive jobs
+      {/* ===== CONTENT ===== */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingTop: TOOLBAR_HEIGHT + 16,
+          paddingBottom: 140, // space for bottom nav
+        }}
+      >
+        <Text style={styles.welcome}>Welcome back 👋</Text>
+        <Text style={styles.driverName}>Driver</Text>
+
+        {/* STATUS CARD */}
+        <View style={styles.statusCard}>
+          <Ionicons
+            name="radio"
+            size={22}
+            color={isOnline ? "#2E7D32" : "#999"}
+          />
+          <Text style={styles.statusCardText}>
+            {isOnline
+              ? "You are online and ready to receive rides"
+              : "Go online to receive ride requests"}
           </Text>
-        </View>
-      )}
-  
-      {/* CONTENT */}
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <Text style={styles.greet}>Welcome back 👋</Text>
-        <Text style={styles.name}>Driver</Text>
-        <Image
-          source={require("../../assets/banners/driver-banner.png")}
-          style={styles.banner}
-        />
-
-        {/* ACTIVE JOBS */}
-        <View style={styles.jobCard}>
-          <Text style={styles.sectionTitle}>Active Jobs</Text>
-
-          <View style={styles.jobItem}>
-            <View>
-              <Text style={styles.jobTitle}>Septic Tank Cleaning</Text>
-              <Text style={styles.jobText}>
-                Pickup: Pakkam → Drop: Thiruvallur
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.viewBtn}
-              onPress={() => navigation.navigate("JobDetails")}
-            >
-              <Text style={styles.viewText}>View</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.jobItem}>
-            <View>
-              <Text style={styles.jobTitle}>Waste Tank Service</Text>
-              <Text style={styles.jobText}>
-                Pickup: Avadi → Drop: Redhills
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.viewBtn}
-              onPress={() => navigation.navigate("JobDetails")}
-            >
-              <Text style={styles.viewText}>View</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         {/* STATS */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>₹ 0</Text>
+            <Text style={styles.statValue}>₹ 840</Text>
             <Text style={styles.statLabel}>Today Earnings</Text>
           </View>
-
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statValue}>6</Text>
             <Text style={styles.statLabel}>Trips</Text>
           </View>
-
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>4.9⭐</Text>
+            <Text style={styles.statValue}>4.9 ⭐</Text>
             <Text style={styles.statLabel}>Rating</Text>
           </View>
         </View>
 
-        {/* GRAPH */}
-        <View style={styles.graphCard}>
-          <Text style={styles.sectionTitle}>Weekly Earnings</Text>
+        {/* WEEKLY EARNINGS */}
+        <View style={styles.chartCard}>
+          <Text style={styles.chartTitle}>Weekly Earnings</Text>
 
-          <View style={styles.graphRow}>
-            {[50, 80, 30, 70, 65, 90, 20].map((h, i) => (
-              <View key={i} style={[styles.bar, { height: h }]} />
+          <View style={styles.chartRow}>
+            {weeklyData.map((v, i) => (
+              <View key={i} style={styles.barWrapper}>
+                <Text style={styles.barValue}>₹{v}</Text>
+                <View
+                  style={[
+                    styles.bar,
+                    { height: Math.max(v / 2, 6) },
+                  ]}
+                />
+                <Text style={styles.dayLabel}>
+                  {["M", "T", "W", "T", "F", "S", "S"][i]}
+                </Text>
+              </View>
             ))}
           </View>
-
-          <Text style={styles.graphNote}>Graph updates daily</Text>
         </View>
 
-        {/* SIMULATE JOB */}
+        {/* QUICK ACTION */}
         <TouchableOpacity
-          style={styles.simBtn}
-          onPress={() => setShowPopup(true)}
+          style={styles.actionBtn}
+          onPress={() => navigation.navigate("LocationScreen")}
         >
-          <Text style={{ color: "#1DBF73" }}>
-            Simulate New Job
-          </Text>
+          <Ionicons name="map" size={18} color="#fff" />
+          <Text style={styles.actionText}>Open Live Tracking</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* POPUP */}
-      <Modal transparent visible={showPopup} animationType="fade">
-        <View style={styles.popupOverlay}>
-          <View style={styles.popupBox}>
-            <Text style={styles.popupTitle}>
-              New Job Incoming 🚨
-            </Text>
+      {/* 🔔 INCOMING RIDE POPUP */}
+      {incomingRide && isOnline && (
+        <View style={styles.rideOverlay}>
+          <View style={styles.rideCard}>
+            <Text style={styles.rideTitle}>🚨 New Ride Request</Text>
+            <Text>Pickup: Anna Nagar</Text>
+            <Text>Drop: T Nagar</Text>
+            <Text>Distance: 3.4 km • ETA: 12 mins</Text>
 
-            <Text style={styles.popupText}>
-              Septic Tank Cleaning — Pickup: Poonamalle
-            </Text>
-
-            <View style={styles.popupRow}>
+            <View style={styles.rideActions}>
               <TouchableOpacity
                 style={styles.rejectBtn}
-                onPress={() => setShowPopup(false)}
+                onPress={() => setIncomingRide(false)}
               >
                 <Text style={{ color: "#c0392b", fontWeight: "700" }}>
                   Reject
@@ -165,140 +152,316 @@ export default function DashboardScreen() {
 
               <TouchableOpacity
                 style={styles.acceptBtn}
-                onPress={() => setShowPopup(false)}
+                onPress={() => {
+                  setIncomingRide(false);
+                  navigation.navigate("LocationScreen");
+                }}
               >
                 <Text style={{ color: "#fff", fontWeight: "700" }}>
-                  View
+                  Accept
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
-      </Modal>
-    </SafeAreaView>
-  );
-}
+      )}
 
+      {/* ===== DASHBOARD ONLY BOTTOM NAV ===== */}
+      <View style={styles.bottomNav}>
+        <BottomNavItem icon="home" label="Home" active />
+        <BottomNavItem
+          icon="clipboard"
+          label="Orders"
+          onPress={() => navigation.navigate("OrdersScreen")}
+        />
+        <BottomNavItem
+          icon="time"
+          label="History"
+          onPress={() => navigation.navigate("HistoryScreen")}
+        />
+        <BottomNavItem
+          icon="navigate"
+          label="Tracking"
+          onPress={() => navigation.navigate("TrackingScreen")}
+        />
+        <BottomNavItem
+          icon="person"
+          label="Profile"
+          onPress={() => navigation.navigate("ProfileScreen")}
+        />
+      </View>
+    </View>
+  );
+};
+
+export default DashboardScreen;
+
+/* ===== BOTTOM NAV ITEM ===== */
+const BottomNavItem = ({
+  icon,
+  label,
+  active,
+  onPress,
+}: {
+  icon: any;
+  label: string;
+  active?: boolean;
+  onPress?: () => void;
+}) => (
+  <TouchableOpacity style={styles.navItem} onPress={onPress}>
+    <Ionicons
+      name={icon}
+      size={22}
+      color={active ? "#2E7D32" : "#777"}
+    />
+    <Text
+      style={[
+        styles.navLabel,
+        active && { color: "#2E7D32" },
+      ]}
+    >
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
+
+/* ================= STYLES ================= */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  header: {
+  container: { flex: 1, backgroundColor: "#F5F6F8" },
+
+  /* TOOLBAR */
+  toolbar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: TOOLBAR_HEIGHT,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    backgroundColor: "#2E7D32",
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    zIndex: 20,
   },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
-  onlineText: { fontWeight: "600", color: "#333" },
-  offlineBanner: {
-    backgroundColor: "#e74c3c",
-    paddingVertical: 12,
+
+  toolbarTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+
+  toolbarRight: {
+    flexDirection: "row",
     alignItems: "center",
   },
-  banner: { width: "100%", height: 180, marginTop: 10 },
-  greet: { fontSize: 16, color: "#888", marginLeft: 16, marginTop: 10},
-  name: {
-    fontSize: 25,
-    fontWeight: "700",
-    color: "#333",
+
+  statusText: {
+    color: "#fff",
+    marginRight: 6,
+  },
+
+  welcome: {
+    fontSize: 16,
+    color: "#777",
     marginLeft: 16,
   },
-  jobCard: {
+
+  driverName: {
+    fontSize: 24,
+    fontWeight: "800",
+    marginLeft: 16,
+    marginBottom: 16,
+    color: "#222",
+  },
+
+  statusCard: {
     marginHorizontal: 16,
     backgroundColor: "#fff",
-    borderRadius: 8,
     padding: 16,
-    marginBottom: 20,
-  },
-  sectionTitle: { fontWeight: "700", marginBottom: 12 },
-  jobItem: {
+    borderRadius: 16,
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    gap: 10,
+    marginBottom: 20,
+    elevation: 3,
   },
-  jobTitle: { fontWeight: "600" },
-  jobText: { fontSize: 12, color: "#888", marginTop: 4 },
-  viewBtn: {
-    backgroundColor: "#1DBF73",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
+
+  statusCardText: {
+    flex: 1,
+    fontWeight: "600",
+    color: "#444",
   },
-  viewText: { color: "#fff", fontWeight: "600", fontSize: 12 },
+
   statsRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     marginHorizontal: 16,
-    marginBottom: 20,
     gap: 12,
+    marginBottom: 24,
   },
+
   statCard: {
     flex: 1,
     backgroundColor: "#fff",
-    borderRadius: 8,
+    borderRadius: 16,
     padding: 16,
     alignItems: "center",
+    elevation: 3,
   },
-  statValue: { fontSize: 18, fontWeight: "700", color: "#1DBF73" },
-  statLabel: { fontSize: 12, color: "#888", marginTop: 8 },
-  graphCard: {
+
+  statValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#2E7D32",
+  },
+
+  statLabel: {
+    fontSize: 12,
+    color: "#777",
+    marginTop: 4,
+  },
+
+  chartCard: {
     marginHorizontal: 16,
     backgroundColor: "#fff",
-    borderRadius: 8,
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 24,
+    elevation: 3,
   },
-  graphRow: {
+
+  chartTitle: {
+    fontWeight: "800",
+    marginBottom: 12,
+    color: "#2E7D32",
+  },
+
+  chartRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
     alignItems: "flex-end",
-    height: 150,
-    marginVertical: 16,
+    height: 160,
+    paddingTop: 20,
   },
-  bar: { width: 30, backgroundColor: "#1DBF73", borderRadius: 4 },
-  graphNote: { fontSize: 12, color: "#888", textAlign: "center" },
-  simBtn: {
-    marginHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 2,
-    borderColor: "#1DBF73",
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  popupOverlay: {
+
+  barWrapper: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+  },
+
+  barValue: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#2E7D32",
+    marginBottom: 6,
+  },
+
+  bar: {
+    width: 14,
+    backgroundColor: "#2E7D32",
+    borderRadius: 6,
+  },
+
+  dayLabel: {
+    marginTop: 6,
+    fontSize: 11,
+    color: "#777",
+    fontWeight: "600",
+  },
+
+  actionBtn: {
+    marginHorizontal: 16,
+    backgroundColor: "#2E7D32",
+    paddingVertical: 14,
+    borderRadius: 16,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    gap: 8,
+    elevation: 4,
   },
-  popupBox: {
+
+  actionText: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 14,
+  },
+
+  /* BOTTOM NAV */
+  bottomNav: {
+    position: "absolute",
+    bottom: 50,
+    left: 0,
+    right: 0,
+    height: 64,
     backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    width: "80%",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderColor: "#eee",
+    elevation: 10,
+    borderRadius:10
   },
-  popupTitle: { fontSize: 18, fontWeight: "700", marginBottom: 12 },
-  popupText: { fontSize: 14, color: "#666", marginBottom: 20 },
-  popupRow: { flexDirection: "row", gap: 12 },
+
+  navItem: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  navLabel: {
+    fontSize: 11,
+    marginTop: 2,
+    color: "#777",
+    fontWeight: "600",
+  },
+
+  /* RIDE POPUP */
+  rideOverlay: {
+    position: "absolute",
+    top: TOOLBAR_HEIGHT,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 50,
+  },
+
+  rideCard: {
+    backgroundColor: "#fff",
+    width: "90%",
+    padding: 20,
+    borderRadius: 20,
+    elevation: 6,
+  },
+
+  rideTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    marginBottom: 10,
+    color: "#222",
+  },
+
+  rideActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 16,
+  },
+
   rejectBtn: {
     flex: 1,
-    paddingVertical: 12,
+    padding: 12,
     borderWidth: 2,
     borderColor: "#c0392b",
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
+
   acceptBtn: {
     flex: 1,
-    paddingVertical: 12,
-    backgroundColor: "#1DBF73",
-    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "#2E7D32",
+    borderRadius: 10,
     alignItems: "center",
   },
 });

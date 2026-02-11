@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,31 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../navigation/AppNavigator";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import MyVehicleScreen from "./MyVehicleScreen";
 
-type Props = NativeStackScreenProps<
-  RootStackParamList,
-  "DriverRegistration"
->;
+const TOOLBAR_HEIGHT =
+  Platform.OS === "android"
+    ? 56 + (StatusBar.currentHeight ?? 0)
+    : 56;
 
-export default function DriverRegistrationScreen({ navigation }: Props) {
+export default function DriverRegistrationScreen({
+  navigation,
+  route,
+}: any) {
+  /* =====================
+     EDIT MODE
+  ===================== */
+  const { driver, mode } = route?.params || {};
+  const isEdit = mode === "edit";
+
+  const [loading, setLoading] = useState(true);
+
   const [form, setForm] = useState({
     name: "",
     dob: "",
@@ -30,171 +44,313 @@ export default function DriverRegistrationScreen({ navigation }: Props) {
     gst: "",
   });
 
+  /* =====================
+     BOOTSTRAP
+  ===================== */
+  useEffect(() => {
+    let active = true;
+
+    const bootstrap = async () => {
+      try {
+        // 🔥 EDIT MODE → prefill and skip checks
+        if (isEdit && driver) {
+          setForm({
+            name: driver.name || "",
+            dob: driver.dob || "",
+            phone: driver.phone || "",
+            email: driver.email || "",
+            address: driver.address || "",
+            aadhar: driver.aadhar || "",
+            pan: driver.pan || "",
+            gst: driver.gst || "",
+          });
+
+          if (active) setLoading(false);
+          return;
+        }
+
+        // 🔹 ADD MODE (old logic preserved)
+        const termsAccepted = await AsyncStorage.getItem("TERMS_ACCEPTED");
+        const driverRegistered = await AsyncStorage.getItem(
+          "DRIVER_REGISTERED"
+        );
+
+        if (driverRegistered === "true") {
+          navigation.replace("VehicleRegistration");
+          return;
+        }
+
+        if (termsAccepted !== "true") {
+          navigation.replace("TermsConditionScreen");
+          return;
+        }
+
+        if (active) setLoading(false);
+      } catch (e) {
+        console.log("Driver bootstrap error:", e);
+        if (active) setLoading(false);
+      }
+    };
+
+    bootstrap();
+    return () => {
+      active = false;
+    };
+  }, [navigation, isEdit, driver]);
+
   const update = (k: keyof typeof form, v: string) =>
     setForm({ ...form, [k]: v });
 
   const isValid =
     form.name &&
     form.dob &&
-    form.phone &&
+    form.phone.length === 10 &&
     form.email &&
     form.address &&
-    form.aadhar &&
-    form.pan;
+    form.aadhar.length === 12 &&
+    form.pan.length >= 10;
+
+  /* =====================
+     LOADER
+  ===================== */
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.loader}>
+        <ActivityIndicator size="large" color="#1DBF73" />
+        <Text style={styles.loadingText}>Loading…</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        {/* ===== TOOLBAR ===== */}
+        <View style={styles.toolbar}>
+          <Ionicons
+  name="arrow-back"
+  size={22}
+  color="#fff"
+  onPress={() => navigation.goBack()}
+/>
+
+          <Text style={styles.toolbarTitle}>
+            {isEdit ? "Edit Driver" : "Driver Onboarding"}
+          </Text>
+          <View style={{ width: 22 }} />
+        </View>
+
+        {/* ===== FORM ===== */}
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: 40 }}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Text style={styles.header}>Driver Registration</Text>
-
-          {/* Form Card */}
           <View style={styles.card}>
-            {/* Name */}
-            <Text style={styles.label}>Full Name *</Text>
-            <TextInput
-              placeholder="Enter your name"
-              style={styles.input}
+            <Input
+              label="Full Name *"
+              icon="person-outline"
               value={form.name}
               onChangeText={(t) => update("name", t)}
             />
 
-            {/* DOB */}
-            <Text style={styles.label}>Date of Birth *</Text>
-            <TextInput
-              placeholder="DD/MM/YYYY"
-              style={styles.input}
+            <Input
+              label="Date of Birth *"
+              icon="calendar-outline"
               value={form.dob}
               onChangeText={(t) => update("dob", t)}
             />
 
-            {/* Phone */}
-            <Text style={styles.label}>Phone *</Text>
-            <TextInput
-              placeholder="Mobile number"
+            <Input
+              label="Phone *"
+              icon="call-outline"
               keyboardType="phone-pad"
-              style={styles.input}
+              maxLength={10}
               value={form.phone}
               onChangeText={(t) => update("phone", t)}
             />
 
-            {/* Email */}
-            <Text style={styles.label}>Email *</Text>
-            <TextInput
-              placeholder="Email address"
-              keyboardType="email-address"
-              style={styles.input}
+            <Input
+              label="Email *"
+              icon="mail-outline"
               value={form.email}
               onChangeText={(t) => update("email", t)}
             />
 
-            {/* Address */}
-            <Text style={styles.label}>Address *</Text>
-            <TextInput
-              placeholder="Complete address"
-              style={[styles.input, { height: 90 }]}
+            <Input
+              label="Address *"
+              icon="location-outline"
               multiline
+              style={{ height: 90, textAlignVertical: "center" }}
               value={form.address}
               onChangeText={(t) => update("address", t)}
             />
 
-            {/* Aadhar */}
-            <Text style={styles.label}>Aadhar Number *</Text>
-            <TextInput
-              placeholder="XXXX XXXX XXXX"
+            <Input
+              label="Aadhar Number *"
+              icon="card-outline"
               keyboardType="numeric"
-              style={styles.input}
+              maxLength={12}
               value={form.aadhar}
               onChangeText={(t) => update("aadhar", t)}
             />
 
-            {/* PAN */}
-            <Text style={styles.label}>PAN Number *</Text>
-            <TextInput
-              placeholder="ABCDE1234F"
-              style={styles.input}
+            <Input
+              label="PAN Number *"
+              icon="document-text-outline"
+              autoCapitalize="characters"
               value={form.pan}
-              onChangeText={(t) => update("pan", t)}
+              onChangeText={(t) =>
+                update("pan", t.toUpperCase())
+              }
             />
 
-            {/* GST */}
-            <Text style={styles.label}>GST (optional)</Text>
-            <TextInput
-              placeholder="GST number"
-              style={styles.input}
+            <Input
+              label="GST (optional)"
+              icon="business-outline"
               value={form.gst}
               onChangeText={(t) => update("gst", t)}
             />
           </View>
+        </ScrollView>
 
+        {/* ===== FOOTER ===== */}
+        <View style={styles.footer}>
           <TouchableOpacity
             style={[styles.button, !isValid && { opacity: 0.4 }]}
             disabled={!isValid}
-            onPress={() => navigation.navigate("VehicleRegistration")}
+            onPress={async () => {
+              // 🔥 Save updated driver
+              await AsyncStorage.setItem(
+                "DRIVER_PROFILE",
+                JSON.stringify(form)
+              );
+
+              if (!isEdit) {
+                await AsyncStorage.setItem(
+                  "DRIVER_REGISTERED",
+                  "true"
+                );
+                navigation.replace("VehicleRegistrationScreen");
+              } else {
+                navigation.goBack(); // 🔥 edit mode
+              }
+            }}
           >
-            <Text style={styles.buttonText}>Next</Text>
+            <Text style={styles.buttonText}>
+              {isEdit ? "Update Driver" : "Continue →"}
+            </Text>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }
 
+/* ===== INPUT ===== */
+const Input = ({ label, icon, style, ...props }: any) => (
+  <View style={{ marginBottom: 14 }}>
+    <Text style={styles.label}>{label}</Text>
+    <View style={styles.inputRow}>
+      <Ionicons name={icon} size={18} color="#777" />
+      <TextInput
+        {...props}
+        style={[styles.input, style]}
+        placeholderTextColor="#999"
+      />
+    </View>
+  </View>
+);
+
+/* ================= STYLES ================= */
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1, backgroundColor: "#fff" },
+
+  loader: {
     flex: 1,
-    backgroundColor: "#f3f7f6",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+
+  loadingText: {
+    marginTop: 10,
+    color: "#888",
+  },
+
+  toolbar: {
+    height: TOOLBAR_HEIGHT,
+    paddingTop:
+      Platform.OS === "android"
+        ? StatusBar.currentHeight
+        : 0,
+    backgroundColor: "#1DBF73",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
   },
 
-  header: {
-    fontSize: 22,
+  toolbarTitle: {
+    color: "#fff",
+    fontSize: 16,
     fontWeight: "800",
-    marginTop: 10,
-    marginBottom: 12,
   },
+
+  scrollContent: { paddingBottom: 16 },
 
   card: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    borderRadius: 18,
+    padding: 16,
+    marginTop: 16,
+    marginHorizontal: 16,
+    elevation: 3,
   },
 
   label: {
-    marginTop: 8,
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#444",
     marginBottom: 6,
-    fontWeight: "600",
-    color: "#333",
+  },
+
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
   },
 
   input: {
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: "#fff",
-    height: 48,
+    flex: 1,
+    fontSize: 14,
+    color: "#222",
+  },
+
+  footer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
 
   button: {
     backgroundColor: "#1DBF73",
-    height: 48,
-    borderRadius: 14,
+    height: 52,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 18,
   },
 
-  buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 16,
+  },
 });

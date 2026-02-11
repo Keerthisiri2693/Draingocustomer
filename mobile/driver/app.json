@@ -1,4 +1,29 @@
 {
-  "name": "DriverApp",
-  "displayName": "DriverApp"
+  "expo": {
+    "name": "DriverApp",
+    "slug": "driver-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+
+    "android": {
+      "package": "com.keerthi.driverapp",
+      "versionCode": 1,
+      "softwareKeyboardLayoutMode": "pan",
+      "navigationBarColor": "#ffffff",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ],
+
+    "extra": {
+      "eas": {
+        "projectId": "f3127bcd-36bd-4bf6-9a66-f937d443a56e"
+      }
+    }
+  }
 }
